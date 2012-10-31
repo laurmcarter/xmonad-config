@@ -19,7 +19,7 @@ data SMConfig = SMConfig
   , yPos      :: Int
   , gap       :: Int
   , font      :: Maybe String
-  , fontWidth :: Int
+  , fontWidth :: Rational
   , fgDzen    :: String
   , bgDzen    :: String
   }
@@ -30,7 +30,7 @@ defaultSMConfig = SMConfig
  , yPos = 20
  , gap = 20
  , font = Nothing
- , fontWidth = 12
+ , fontWidth = 12.0
  , fgDzen = "#ffffff"
  , bgDzen = "#808080"
  }
@@ -47,7 +47,7 @@ namedSM smc xc title km = do
        , "-ta" , "l"
        , "-sa" , "l"
        , "-l"  , show $ length km
-       , "-w"  , show ((fontWidth smc * maxLineLen) + gap smc + 10)
+       , "-w"  , show ((round (fontWidth smc * fromIntegral maxLineLen)) + gap smc + 10)
        ] ++ (maybe [] (\f->["-fn",f]) $ font smc)
        ))
     hPutStrLn i ("^pa(10)"++title)
@@ -61,7 +61,7 @@ namedSM smc xc title km = do
     maxLineLen = maximum $ length title : map (\(k,t,_)->1 + length k + length t) km
     maxKeyLen = maximum $ map (\(k,_,_)->length k) km
 
-alignDzen smc len (k,t,_) = "^pa(10)" ++ k ++ "^pa("++show (fontWidth smc * len + gap smc)++")"++t
+alignDzen smc len (k,t,_) = "^pa(10)" ++ k ++ "^pa("++show ((round (fontWidth smc * fromIntegral len)) + gap smc)++")"++t
 
 reduceKeys :: [(a,b,c)] -> [(a,c)]
 reduceKeys = map (\(x,_,y)->(x,y))

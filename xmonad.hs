@@ -124,7 +124,7 @@ myKeys conf = mkKeymap conf $
 
 mySMConfig = defaultSMConfig
   { gap = 50
-  , fontWidth = 6
+  , fontWidth = 6.5
   , font = Just myFont
   }
 
@@ -165,7 +165,6 @@ main = do
   dzenMain <- statusBarMain True
   ext      <- connectedToExt
   dzenExt  <- statusBarExternal ext
-  mapM_ spawn myStartApps
   xmonad $ defaultConfig
     { modMask            = myModKey
     , terminal           = myTerminal
@@ -196,9 +195,7 @@ connectedToExt = do
 vol delta up = "amixer set Master " ++ show delta ++ "%" ++ if up then "+" else "-"
 
 --xDoTool k = spawn ("xdotool key " ++ k)
-xDoTool k w = io $ do
-  runProcessWithInput "xdotool" ["text","--window",show w,k] ""
-  trace ("XMONAD: " ++ show w)
+xDoTool k w = io $ (runProcessWithInput "xdotool" ["text","--window",show w,k] "" >> return ())
 
 cleanUp :: IO ()
 cleanUp = runProcessWithInput "killall" ["stalonetray","dzen2","conky"] "" >> return ()
