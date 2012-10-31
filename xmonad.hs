@@ -29,6 +29,7 @@ import My.Bars
 import My.Decor
 import My.WorkspaceOnScreen
 import My.NamedSubmap
+import My.CycleScreens
 
 myModKey     = mod4Mask
 myTerminal   = "gnome-terminal"
@@ -113,7 +114,7 @@ myKeys conf = mkKeymap conf $
         , ( "<Print>"      , "Screenshot"         , spawn "scrot" )
         , ( "M-S-l"        , "Lock"               , spawn "slock" )
         , ( "M-<Tab>"      , "Cycle Windows"      , windows W.focusDown )
-        , ( "M-S-<Tab>"    , "Last WS"            , toggleWS )
+        , ( "M-S-<Tab>"    , "Cycle Screens"      , cycleScreens )
         , ( "M-q"          , "Restart XMonad"     , spawn "xmonad --restart" )
         , ( "M-S-q"        , "Logout"             , io (exitWith ExitSuccess))
         , ( "M-S-<F4>"     , "Shut Down"          , spawn "poweroff" )
