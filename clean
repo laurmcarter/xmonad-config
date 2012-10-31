@@ -1,0 +1,5 @@
+#!/bin/bash
+
+find . -name '*.hi' -exec rm {} \;
+find . -name '*.o' -exec rm {} \;
+rm -f xmonad-x86_64-linux
