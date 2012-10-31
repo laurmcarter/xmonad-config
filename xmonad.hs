@@ -33,10 +33,6 @@ import My.NamedSubmap
 myModKey     = mod4Mask
 myTerminal   = "gnome-terminal"
 myBrowser    = "google-chrome"
-myStartApps  = [ "nm-applet"
-               , "thunderbird"
-               , "gnome-terminal --geometry 1278x782 -t finch -e finch"
-               ]
 
 wsMap = (onScreen 0 ["1","2","3","4","M","I"]) ++
         (onScreen 1 ["5","6","7","8","9"])
@@ -205,7 +201,7 @@ xDoTool k w = io $ do
   trace ("XMONAD: " ++ show w)
 
 cleanUp :: IO ()
-cleanUp = runProcessWithInput "killall" (["stalonetray","dzen2","conky","finch"]++myStartApps) "" >> return ()
+cleanUp = runProcessWithInput "killall" ["stalonetray","dzen2","conky"] "" >> return ()
 
 -- Helpers
 
