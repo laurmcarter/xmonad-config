@@ -47,7 +47,7 @@ namedSM smc xc title km = do
        , "-ta" , "l"
        , "-sa" , "l"
        , "-l"  , show $ length km
-       , "-w"  , show ((fontWidth smc * maxLineLen) + gap smc)
+       , "-w"  , show ((fontWidth smc * maxLineLen) + gap smc + 10)
        ] ++ (maybe [] (\f->["-fn",f]) $ font smc)
        ))
     hPutStrLn i ("^pa(10)"++title)
