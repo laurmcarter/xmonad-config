@@ -18,7 +18,7 @@ data SMConfig = SMConfig
   { xPos      :: Int
   , yPos      :: Int
   , gap       :: Int
-  , font      :: Maybe String
+  , dzenFont  :: Maybe String
   , fontWidth :: Rational
   , fgDzen    :: String
   , bgDzen    :: String
@@ -29,7 +29,7 @@ defaultSMConfig = SMConfig
  { xPos = 20
  , yPos = 20
  , gap = 20
- , font = Nothing
+ , dzenFont  = Nothing
  , fontWidth = 12.0
  , fgDzen = "#ffffff"
  , bgDzen = "#808080"
@@ -48,7 +48,7 @@ namedSM smc xc title km = do
        , "-sa" , "l"
        , "-l"  , show $ length km
        , "-w"  , show ((round (fontWidth smc * fromIntegral maxLineLen)) + gap smc + 10)
-       ] ++ (maybe [] (\f->["-fn",f]) $ font smc)
+       ] ++ (maybe [] (\f->["-fn",f]) $ dzenFont smc)
        ))
     hPutStrLn i ("^pa(10)"++title)
     mapM (hPutStrLn i . alignDzen smc maxKeyLen) km

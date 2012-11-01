@@ -6,6 +6,7 @@ module My.Decor
   , borders
   , myXPConfig
   , myDzenPP
+  , mySMConfig
   , myFont
   , myBorderWidth
   , ColorScheme(..)
@@ -13,6 +14,8 @@ module My.Decor
 
 import XMonad.Prompt
 import XMonad.Hooks.DynamicLog
+
+import My.NamedSubmap
 
 import Data.Word (Word32)
 import System.IO (hPutStrLn)
@@ -50,6 +53,12 @@ myXPConfig = defaultXPConfig
   , borderColor = fg borders
   , promptBorderWidth = 1
   , historySize = 100
+  }
+
+mySMConfig = defaultSMConfig
+  { gap = 50
+  , fontWidth = 6.5
+  , dzenFont  = Just myFont
   }
 
 data ColorScheme = CS

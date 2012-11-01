@@ -13,12 +13,12 @@ import XMonad.Prompt.Workspace (workspacePrompt)
 import XMonad.Prompt.XMonad (xmonadPrompt)
 
 import XMonad.Util.EZConfig (mkKeymap)
-import XMonad.Util.Run (spawnPipe,runProcessWithInput)
+import XMonad.Util.Run (spawnPipe,runProcessWithInput,runInTerm)
 
 import XMonad.Actions.SpawnOn (spawnHere)
 import XMonad.Actions.Submap (submap)
 import XMonad.Actions.FindEmptyWorkspace (viewEmptyWorkspace,tagToEmptyWorkspace)
-import XMonad.Actions.CycleWS (toggleWS)
+import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
 
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower)
@@ -30,10 +30,15 @@ import My.Decor
 import My.WorkspaceOnScreen
 import My.NamedSubmap
 import My.CycleScreens
+import My.QueryHelpers
 
 myModKey     = mod4Mask
 myTerminal   = "gnome-terminal"
 myBrowser    = "google-chrome"
+
+finch        = runInTerm "--geometry 1278x782 -t finch" "finch"
+thunderbird  = spawn "thunderbird"
+nmApplet     = spawn "nm-applet"
 
 wsMap = (onScreen 0 ["1","2","3","4","M","I"]) ++
         (onScreen 1 ["5","6","7","8","9"])
@@ -90,15 +95,6 @@ myKeys conf = mkKeymap conf $
       , ( "M-a"        , "Next Layout"  , sendMessage NextLayout )
       , ( "r"          , "First Layout" , sendMessage FirstLayout )
       ] )
-    , ( "M-f"          , sm "Finch" $
-      [ ( "<Tab>"      , "Next"    , withFocused $ xDoTool "alt+n" )
-      , ( "S-<Tab>"    , "Prev"    , withFocused $ xDoTool "alt+p" )
-      , ( "m"          , "Move"    , withFocused $ xDoTool "alt+m" )
-      , ( "r"          , "Resize"  , withFocused $ xDoTool "alt+r" )
-      , ( "c"          , "Close"   , withFocused $ xDoTool "alt+c" )
-      , ( "q"          , "Quit"    , withFocused $ xDoTool "alt+q" )
-      , ( "a"          , "Options" , withFocused $ xDoTool "alt+a" )
-      ] )
     ---- top level keys ----
     , ( "M-k"          , sm "Keys" topLevelKeys)
     ] ++
@@ -122,15 +118,13 @@ myKeys conf = mkKeymap conf $
         , ( "<XF86AudioLowerVolume>" , "Vol Down" , spawn $ vol 5 False )
         ]
       sm = namedSM mySMConfig conf
+      myView = workspaceOnScreen wsMap W.view
+      myShift = windows . W.shift
 
-mySMConfig = defaultSMConfig
-  { gap = 50
-  , fontWidth = 6.5
-  , font = Just myFont
-  }
-
-myView = workspaceOnScreen wsMap W.view
-myShift = windows . W.shift
+myStartupHook = do
+  runMaybe finch       (name      =~? "finch")
+  runMaybe thunderbird (className  =? "Thunderbird")
+  runMaybe nmApplet    (name      =~? "nm")
 
 myManageHook = (composeAll . concat $
   [ [ resource  =? r    --> doIgnore          | r <- ignores ]
@@ -150,16 +144,6 @@ myManageHook = (composeAll . concat $
     notifications = ["notify-dzen"]
     mail          = ["Thunderbird"]
     im            = ["finch"]
-    ----
-    role = stringProperty "WM_WINDOW_ROLE"
-    name = stringProperty "WM_NAME"
-    ----
-    (=/?)   :: Query String -> String -> Query Bool
-    x =/? q  = fmap not $ x =? q
-    (=~?)   :: Query String -> String -> Query Bool
-    q =~? x  = fmap (isInfixOf $ decap x) $ fmap decap q
-    decap   :: String -> String
-    decap    = map toLower
 
 main = do
   cleanUp
@@ -179,6 +163,7 @@ main = do
     , layoutHook         = avoidStruts $ smartBorders $ myLayout
     , manageHook         = myManageHook <+> manageDocks
     , logHook            = dynamicLogWithPP $ myDzenPP (dzenMain++dzenExt)
+    , startupHook        = myStartupHook
     }
 
 -- IO
