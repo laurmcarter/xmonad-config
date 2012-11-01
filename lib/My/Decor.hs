@@ -23,6 +23,7 @@ import System.IO (hPutStrLn)
 myBorderWidth :: Word32
 myBorderWidth = 1
 myFont        = "-*-terminus-medium-r-normal-*-12-*-*-*-*-*-*-*"
+--myFont        = "Droid Sans Mono:size=8"
 
 normal  = CS { fg = "#ffffff" , bg = "#000000" }
 urgent  = CS { fg = "#0099ff" , bg = "#0077ff" }

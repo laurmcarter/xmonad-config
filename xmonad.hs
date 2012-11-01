@@ -180,7 +180,6 @@ connectedToExt = do
 
 vol delta up = "amixer set Master " ++ show delta ++ "%" ++ if up then "+" else "-"
 
---xDoTool k = spawn ("xdotool key " ++ k)
 xDoTool k w = io $ (runProcessWithInput "xdotool" ["text","--window",show w,k] "" >> return ())
 
 cleanUp :: IO ()
