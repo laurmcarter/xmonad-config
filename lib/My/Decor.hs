@@ -35,8 +35,8 @@ myDzenPP hs = myMod defaultPP
  where
     myMod pp = pp
       { ppCurrent = clickWS (dzenColor "lightgreen" "" . ppCurrent pp)
-      , ppVisible = clickWS (dzenColor "lightblue" "" . ppVisible pp)
-      , ppHidden = clickWS (ppHidden pp)
+      , ppVisible = clickWS (ppVisible pp)
+      , ppHidden = clickWS (dzenColor "gray" "" . ppHidden pp)
       , ppOutput = sequence_ . mapM hPutStrLn hs
       , ppUrgent = clickWS (dzenColor "red" "green" . ppUrgent pp)
       }
