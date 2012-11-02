@@ -9,6 +9,7 @@ module My.Decor
   , mySMConfig
   , myFont
   , myBorderWidth
+  , dzenColor
   , ColorScheme(..)
   ) where
 
@@ -31,12 +32,13 @@ focused = CS { fg = "#f0f0f0" , bg = "#333333" }
 borders = CS { fg = "#433ffe" , bg = "#010062" }
 
 myDzenPP hs = myMod defaultPP
-  where
+ where
     myMod pp = pp
-      { ppCurrent = clickWS (ppCurrent pp)
-      , ppVisible = clickWS (ppVisible pp)
+      { ppCurrent = clickWS (dzenColor "lightgreen" "" . ppCurrent pp)
+      , ppVisible = clickWS (dzenColor "lightblue" "" . ppVisible pp)
       , ppHidden = clickWS (ppHidden pp)
       , ppOutput = sequence_ . mapM hPutStrLn hs
+      , ppUrgent = clickWS (dzenColor "red" "green" . ppUrgent pp)
       }
 
 goToWS ws = "xdotool key 'super+" ++ ws ++ "'"
