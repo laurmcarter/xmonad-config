@@ -19,6 +19,7 @@ import XMonad.Actions.SpawnOn (spawnHere)
 import XMonad.Actions.Submap (submap)
 import XMonad.Actions.FindEmptyWorkspace (viewEmptyWorkspace,tagToEmptyWorkspace)
 import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
+import XMonad.Actions.Warp (warpToWindow)
 
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower)
@@ -110,7 +111,7 @@ myKeys conf = mkKeymap conf $
         , ( "<Print>"      , "Screenshot"         , spawn "scrot" )
         , ( "M-S-l"        , "Lock"               , spawn "slock" )
         , ( "M-<Tab>"      , "Cycle Windows"      , windows W.focusDown )
-        , ( "M-S-<Tab>"    , "Cycle Screens"      , cycleScreens )
+        , ( "M-S-<Tab>"    , "Cycle Screens"      , cycleScreensWith myView )
         , ( "M-q"          , "Restart XMonad"     , spawn "xmonad --restart" )
         , ( "M-S-q"        , "Logout"             , io (exitWith ExitSuccess))
         , ( "M-S-<F4>"     , "Shut Down"          , spawn "poweroff" )
@@ -118,8 +119,8 @@ myKeys conf = mkKeymap conf $
         , ( "<XF86AudioLowerVolume>" , "Vol Down" , spawn $ vol 5 False )
         ]
       sm = namedSM mySMConfig conf
-      myView = workspaceOnScreen wsMap W.view
-      myShift = windows . W.shift
+      myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
+      myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
 
 myStartupHook = do
   runMaybe finch       (name      =~? "finch")

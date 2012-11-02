@@ -1,19 +1,19 @@
 
 module My.CycleScreens
   ( cycleScreens
+  , cycleScreensWith
   ) where
 
 import XMonad
 import XMonad.StackSet
 
-cycleScreens = do
+cycleScreensWith f = do
   sid <- gets (screen . current . windowset)
   ws <- screenWorkspace $ sid + 1
-  maybe (screenWorkspace 0 >>= viewIfExists) viewWS ws
+  maybe (screenWorkspace 0 >>= flip whenJust f) f ws
+
+cycleScreens = cycleScreensWith viewWS
 
 viewWS :: WorkspaceId -> X ()
 viewWS = windows . view
-
-viewIfExists :: Maybe WorkspaceId -> X ()
-viewIfExists = flip whenJust viewWS
 
