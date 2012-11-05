@@ -20,6 +20,7 @@ import XMonad.Actions.Submap (submap)
 import XMonad.Actions.FindEmptyWorkspace (viewEmptyWorkspace,tagToEmptyWorkspace)
 import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
 import XMonad.Actions.Warp (warpToWindow)
+import XMonad.Actions.CycleWS (toggleWS)
 
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower)
@@ -106,21 +107,25 @@ myKeys conf = mkKeymap conf $
     ]
     where
       topLevelKeys =
-        [ ( "M-S-m"        , "View Mail"          , workspaceOnScreen wsMap W.view "M" )
-        , ( "M-S-i"        , "View IM"            , workspaceOnScreen wsMap W.view "I" )
-        , ( "<Print>"      , "Screenshot"         , spawn "scrot" )
-        , ( "M-S-l"        , "Lock"               , spawn "slock" )
-        , ( "M-<Tab>"      , "Cycle Windows"      , windows W.focusDown )
-        , ( "M-S-<Tab>"    , "Cycle Screens"      , cycleScreensWith myView )
-        , ( "M-q"          , "Restart XMonad"     , spawn "xmonad --restart" )
-        , ( "M-S-q"        , "Logout"             , io (exitWith ExitSuccess))
-        , ( "M-S-<F4>"     , "Shut Down"          , spawn "poweroff" )
-        , ( "<XF86AudioRaiseVolume>" , "Vol Up"   , spawn $ vol 5 True )
-        , ( "<XF86AudioLowerVolume>" , "Vol Down" , spawn $ vol 5 False )
+        [ ( "M-S-m"        , "View Mail"               , workspaceOnScreen wsMap W.view "M" )
+        , ( "M-S-i"        , "View IM"                 , workspaceOnScreen wsMap W.view "I" )
+        , ( "<Print>"      , "Screenshot"              , spawn "scrot" )
+        , ( "M-S-l"        , "Lock"                    , spawn "slock" )
+        , ( "M-<Tab>"      , "Cycle Windows"           , windows W.focusDown )
+        , ( "M-S-<Tab>"    , "Cycle Screens/Toggle WS" , cycleOrToggle )
+        , ( "M-q"          , "Restart XMonad"          , spawn "xmonad --restart" )
+        , ( "M-S-q"        , "Logout"                  , io (exitWith ExitSuccess))
+        , ( "M-S-<F4>"     , "Shut Down"               , spawn "poweroff" )
+        , ( "<XF86AudioRaiseVolume>" , "Vol Up"        , spawn $ vol 5 True )
+        , ( "<XF86AudioLowerVolume>" , "Vol Down"      , spawn $ vol 5 False )
         ]
       sm = namedSM mySMConfig conf
       myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
       myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
+      cycleOrToggle = do worked <- reportCycleScreensWith myView
+                         if worked
+                           then return ()
+                           else toggleWS
 
 myStartupHook = do
   runMaybe finch       (name      =~? "finch")
