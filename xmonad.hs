@@ -36,7 +36,7 @@ import My.QueryHelpers
 
 myModKey     = mod4Mask
 myTerminal   = "gnome-terminal"
-myBrowser    = "google-chrome"
+myBrowser    = "chromium"
 
 finch        = runInTerm "--geometry 1278x782 -t finch" "finch"
 thunderbird  = spawn "thunderbird"
@@ -190,7 +190,7 @@ vol delta up = "amixer set Master " ++ show delta ++ "%" ++ if up then "+" else 
 xDoTool k w = io $ (runProcessWithInput "xdotool" ["text","--window",show w,k] "" >> return ())
 
 cleanUp :: IO ()
-cleanUp = runProcessWithInput "killall" ["stalonetray","dzen2","conky"] "" >> return ()
+cleanUp = runProcessWithInput "killall" ["stalonetray","dzen2","conky","nm-applet"] "" >> return ()
 
 -- Helpers
 

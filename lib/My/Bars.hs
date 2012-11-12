@@ -13,12 +13,12 @@ import Control.Monad (when)
 import My.Decor
 
 mySBarsStart =                                   0
-mySBars      = [ (dzenBar "l"               ,  450) ]
+mySBars      = [ (dzenBar "l"               ,  800) ]
 
-myBarsStart  =                                 450
-myBars       = [ (conkyBar ".conkytime" "c" ,  830)
-               , (conkyBar ".conkytop"  "r" , 1200)
-               , (stalonetray               , 1280)
+myBarsStart  =                                 800
+myBars       = [ (conkyBar ".conkytime" "c" ,  1120)
+               , (conkyBar ".conkytop"  "r" , 1840)
+               , (stalonetray               , 1920)
                ]
 
 sbarsMain = bars mySBarsStart mySBars
@@ -72,6 +72,7 @@ stalonetray x0 x1 = concat
   , "+0' -i '16' -bg '"
   , bg normal
   , "' --icon-gravity NE"
+  , " --kludges=force_icons_size"
   ]
   where w = (x1 - x0) `div` 16
 
