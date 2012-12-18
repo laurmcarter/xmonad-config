@@ -5,8 +5,10 @@ import qualified XMonad.StackSet as W
 import XMonad.Hooks.ManageHelpers (doCenterFloat,doFullFloat)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks)
 import XMonad.Hooks.DynamicLog (dynamicLogWithPP)
+import XMonad.Hooks.UrgencyHook (withUrgencyHook,NoUrgencyHook(..))
 
 import XMonad.Layout.NoBorders (smartBorders)
+import XMonad.Layout.IM
 
 import XMonad.Prompt.Shell (split,shellPrompt)
 import XMonad.Prompt.Workspace (workspacePrompt)
@@ -20,7 +22,7 @@ import XMonad.Actions.Submap (submap)
 import XMonad.Actions.FindEmptyWorkspace (viewEmptyWorkspace,tagToEmptyWorkspace)
 import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
 import XMonad.Actions.Warp (warpToWindow)
-import XMonad.Actions.CycleWS (toggleWS)
+import XMonad.Actions.CycleWS (toggleWS')
 
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower)
@@ -47,12 +49,13 @@ wsMap = (onScreen 0 ["1","2","3","4","M","I"]) ++
 
 myWorkspaces = (map show [1..9]) ++ ["M","I"]
 
-myLayout     = tiled ||| Mirror tiled ||| Full
+myLayout     = tiled ||| Mirror tiled ||| Full ||| im
   where
     tiled = Tall nmaster delta ratio
     nmaster = 1
     delta = 3 / 100
     ratio = 1 / 2
+    im = withIM 0.15 (Role "browser") Full
 
 myKeys conf = mkKeymap conf $
     ---- app keys ----
@@ -107,25 +110,22 @@ myKeys conf = mkKeymap conf $
     ]
     where
       topLevelKeys =
-        [ ( "M-S-m"        , "View Mail"               , workspaceOnScreen wsMap W.view "M" )
-        , ( "M-S-i"        , "View IM"                 , workspaceOnScreen wsMap W.view "I" )
-        , ( "<Print>"      , "Screenshot"              , spawn "scrot" )
-        , ( "M-S-l"        , "Lock"                    , spawn "slock" )
-        , ( "M-<Tab>"      , "Cycle Windows"           , windows W.focusDown )
-        , ( "M-S-<Tab>"    , "Cycle Screens/Toggle WS" , cycleOrToggle )
-        , ( "M-q"          , "Restart XMonad"          , spawn "xmonad --restart" )
-        , ( "M-S-q"        , "Logout"                  , io (exitWith ExitSuccess))
-        , ( "M-S-<F4>"     , "Shut Down"               , spawn "poweroff" )
+        [ ( "M-S-m"         , "View Mail"               , workspaceOnScreen wsMap W.view "M" )
+        , ( "M-S-i"         , "View IM"                 , workspaceOnScreen wsMap W.view "I" )
+        , ( "<Print>"       , "Screenshot"              , spawn "scrot" )
+        , ( "M-S-l"         , "Lock"                    , spawn "slock" )
+        , ( "M-<Tab>"       , "Cycle Windows"           , windows W.focusDown )
+        , ( "M-S-<Tab>"     , "Cycle Screens"           , cycleScreensWith myView )
+        , ( "M-<Backspace>" , "Toggle WS"               , toggleWS' ["1"] )
+        , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --restart" )
+        , ( "M-S-q"         , "Logout"                  , io (exitWith ExitSuccess))
+        , ( "M-S-<F4>"      , "Shut Down"               , spawn "poweroff" )
         , ( "<XF86AudioRaiseVolume>" , "Vol Up"        , spawn $ vol 5 True )
         , ( "<XF86AudioLowerVolume>" , "Vol Down"      , spawn $ vol 5 False )
         ]
       sm = namedSM mySMConfig conf
       myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
       myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
-      cycleOrToggle = do worked <- reportCycleScreensWith myView
-                         if worked
-                           then return ()
-                           else toggleWS
 
 myStartupHook = do
   runMaybe finch       (name      =~? "finch")
@@ -147,7 +147,7 @@ myManageHook = (composeAll . concat $
     ignores       = ["desktop_window","stalonetray"]
     classFloats   = ["MPlayer","Xmessage", "Gcolor2"]
     fullFloats    = ["exe"]
-    matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup"]
+    matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup","msg"]
     notifications = ["notify-dzen"]
     mail          = ["Thunderbird"]
     im            = ["finch"]
@@ -157,7 +157,7 @@ main = do
   dzenMain <- statusBarMain True
   ext      <- connectedToExt
   dzenExt  <- statusBarExternal ext
-  xmonad $ defaultConfig
+  xmonad $ withUrgencyHook NoUrgencyHook $ defaultConfig
     { modMask            = myModKey
     , terminal           = myTerminal
 
