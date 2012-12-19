@@ -1,4 +1,6 @@
 
+-- Imports {{{
+
 import XMonad
 import qualified XMonad.StackSet as W
 
@@ -8,7 +10,8 @@ import XMonad.Hooks.DynamicLog (dynamicLogWithPP)
 import XMonad.Hooks.UrgencyHook (withUrgencyHook,NoUrgencyHook(..))
 
 import XMonad.Layout.NoBorders (smartBorders)
-import XMonad.Layout.IM
+import XMonad.Layout.IM (withIM, Property(..))
+import XMonad.Layout.PerWorkspace (onWorkspace)
 
 import XMonad.Prompt.Shell (split,shellPrompt)
 import XMonad.Prompt.Workspace (workspacePrompt)
@@ -36,73 +39,49 @@ import My.NamedSubmap
 import My.CycleScreens
 import My.QueryHelpers
 
-myModKey     = mod4Mask
+-- }}}
+
+-- Applications {{{
+
 myTerminal   = "gnome-terminal"
 myBrowser    = "google-chrome"
-
 finch        = runInTerm "--geometry 1278x782 -t finch" "finch"
+pidgin       = spawn "pidgin"
 thunderbird  = spawn "thunderbird"
 nmApplet     = spawn "nm-applet"
+
+-- }}}
+
+-- Workspaces {{{
 
 wsMap = (onScreen 0 ["1","2","3","4","M","I"]) ++
         (onScreen 1 ["5","6","7","8","9"])
 
 myWorkspaces = (map show [1..9]) ++ ["M","I"]
 
-myLayout     = tiled ||| Mirror tiled ||| Full ||| im
+-- }}}
+
+-- Layouts {{{
+
+myLayout     = avoidStruts $ smartBorders $ 
+  onWorkspace "I" im $
+  tiled ||| Mirror tiled ||| Full
   where
     tiled = Tall nmaster delta ratio
     nmaster = 1
     delta = 3 / 100
     ratio = 1 / 2
-    im = withIM 0.15 (Role "browser") Full
+    im = withIM 0.15 (Role "buddy_list") Full
+
+-- }}}
+
+-- Keys {{{
+
+myModKey     = mod4Mask
 
 myKeys conf = mkKeymap conf $
     ---- app keys ----
-    [ ( "M-x"          , sm "Applications" $
-      [ ( "<Return>"   , "Terminal"    , spawn myTerminal )
-      , ( "b"          , "Browser"     , spawn myBrowser )
-      , ( "p"          , "DMenu"       , spawn "dmenu_run -p '>>>'" )
-      , ( "c"          , "Qalculate"   , spawn "qalculate-gtk" )
-      , ( "l"          , "GColor"      , spawn "gcolor2" )
-      , ( "v"          , "Evince"      , spawn "evince" )
-      , ( "o"          , "Xprop"       , spawn "xprop > /home/kcarter/.xprop" )
-      , ( "x"          , "Kill Window" , kill )
-      , ( "M-x"        , "Kill Window" , kill )
-      ] )
-    ---- window keys ----
-    , ( "M-w"          , sm "Windows" $
-      [ ( "<Return>"   , "Swap Master"  , windows W.swapMaster )
-      , ( "S-j"        , "Swap Down"    , windows W.swapDown )
-      , ( "S-k"        , "Swap Up"      , windows W.swapUp )
-      , ( "j"          , "Focus Up"     , windows W.focusUp )
-      , ( "k"          , "Focus Down"   , windows W.focusDown )
-      , ( "h"          , "Shrink"       , sendMessage Shrink )
-      , ( "l"          , "Expand"       , sendMessage Expand )
-      , ( "+"          , "Inc # Master" , sendMessage (IncMasterN 1) )
-      , ( "-"          , "Dec # Master" , sendMessage (IncMasterN (-1)) )
-      ] )
-    ---- workspace keys ----
-    , ( "M-s"          , sm "Prompts" $
-      [ ( "p"          , "WS Prompt (view)"  , workspacePrompt myXPConfig (windows . W.view) )
-      , ( "S-p"        , "WS Prompt (shift)" , workspacePrompt myXPConfig (windows . W.shift) )
-      , ( "s"          , "Shell Prompt"      , shellPrompt myXPConfig )
-      , ( "x"          , "XMonad Prompt"     , xmonadPrompt myXPConfig )
-      , ( "e"          , "View Empty WS"     , viewEmptyWorkspace )
-      , ( "S-e"        , "Shift to Empty WS" , tagToEmptyWorkspace )
-      , ( "S-m"        , "Shift to Mail"     , windows $ W.shift "M" )
-      , ( "S-i"        , "Shift to IM"       , windows $ W.shift "I" )
-      ] )
-    ---- layout keys ----
-    , ( "M-a"          , sm "Layouts" $
-      [ ( "<Return>"   , "Sink Window"  , withFocused $ windows . W.sink )
-      , ( "a"          , "Next Layout"  , sendMessage NextLayout )
-      , ( "M-a"        , "Next Layout"  , sendMessage NextLayout )
-      , ( "r"          , "First Layout" , sendMessage FirstLayout )
-      ] )
-    ---- top level keys ----
-    , ( "M-k"          , sm "Keys" topLevelKeys)
-    ] ++
+    ( "M-k"          , sm "Keys" topLevelKeys) :
     reduceKeys topLevelKeys ++
     [ ("M-" ++ m ++ w, f w)
       | (f,m) <- [(myView, ""), (myShift, "S-")]
@@ -118,30 +97,81 @@ myKeys conf = mkKeymap conf $
         , ( "M-S-<Tab>"     , "Cycle Screens"           , cycleScreensWith myView )
         , ( "M-<Backspace>" , "Toggle WS"               , toggleWS' ["1"] )
         , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --restart" )
-        , ( "M-S-q"         , "Logout"                  , io (exitWith ExitSuccess))
+        , ( "M-S-q"         , "Logout"                  , io $ exitWith ExitSuccess )
         , ( "M-S-<F4>"      , "Shut Down"               , spawn "poweroff" )
-        , ( "<XF86AudioRaiseVolume>" , "Vol Up"        , spawn $ vol 5 True )
-        , ( "<XF86AudioLowerVolume>" , "Vol Down"      , spawn $ vol 5 False )
+        , ( "<XF86AudioRaiseVolume>" , "Vol Up"         , spawn $ volUp 5 )
+        , ( "<XF86AudioLowerVolume>" , "Vol Down"       , spawn $ volDown 5 )
+        ---- application keys ----
+        , ( "M-x"           , "Applications Keys"       , sm "Applications" $
+          [ ( "<Return>"      , "Terminal"                , spawn myTerminal )
+          , ( "b"             , "Browser"                 , spawn myBrowser )
+          , ( "p"             , "DMenu"                   , spawn "dmenu_run -p '>>>'" )
+          , ( "c"             , "Qalculate"               , spawn "qalculate-gtk" )
+          , ( "l"             , "GColor"                  , spawn "gcolor2" )
+          , ( "v"             , "Evince"                  , spawn "evince" )
+          , ( "o"             , "Xprop"                   , spawn "xprop > /home/kcarter/.xprop" )
+          , ( "x"             , "Kill Window"             , kill )
+          , ( "M-x"           , "Kill Window"             , kill )
+          ] )
+        ---- window keys ----
+        , ( "M-w"          , "Windows Keys"             , sm "Windows" $
+          [ ( "<Return>"     , "Swap Master"              , windows W.swapMaster )
+          , ( "S-j"          , "Swap Down"                , windows W.swapDown )
+          , ( "S-k"          , "Swap Up"                  , windows W.swapUp )
+          , ( "j"            , "Focus Up"                 , windows W.focusUp )
+          , ( "k"            , "Focus Down"               , windows W.focusDown )
+          , ( "h"            , "Shrink"                   , sendMessage Shrink )
+          , ( "l"            , "Expand"                   , sendMessage Expand )
+          , ( "+"            , "Inc # Master"             , sendMessage (IncMasterN 1) )
+          , ( "-"            , "Dec # Master"             , sendMessage (IncMasterN (-1)) )
+          ] )
+        ---- workspace keys ----
+        , ( "M-s"          , "Prompts Keys"             , sm "Prompts" $
+          [ ( "p"          , "WS Prompt (view)"           , workspacePrompt myXPConfig (windows . W.view) )
+          , ( "S-p"        , "WS Prompt (shift)"          , workspacePrompt myXPConfig (windows . W.shift) )
+          , ( "s"          , "Shell Prompt"               , shellPrompt myXPConfig )
+          , ( "x"          , "XMonad Prompt"              , xmonadPrompt myXPConfig )
+          , ( "e"          , "View Empty WS"              , viewEmptyWorkspace )
+          , ( "S-e"        , "Shift to Empty WS"          , tagToEmptyWorkspace )
+          , ( "S-m"        , "Shift to Mail"              , windows $ W.shift "M" )
+          , ( "S-i"        , "Shift to IM"                , windows $ W.shift "I" )
+          ] )
+        ---- layout keys ----
+        , ( "M-a"          , "Layouts Keys"             , sm "Layouts" $
+          [ ( "<Return>"   , "Sink Window"                , withFocused $ windows . W.sink )
+          , ( "a"          , "Next Layout"                , sendMessage NextLayout )
+          , ( "M-a"        , "Next Layout"                , sendMessage NextLayout )
+          , ( "r"          , "First Layout"               , sendMessage FirstLayout )
+          ] )
         ]
       sm = namedSM mySMConfig conf
       myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
       myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
 
+-- }}}
+
+-- StartupHook {{{
+
 myStartupHook = do
-  runMaybe finch       (name      =~? "finch")
-  runMaybe thunderbird (className  =? "Thunderbird")
+  --runMaybe finch       (name      =~? "finch")
+  runMaybe pidgin      (className =~? "pidgin")
+  runMaybe thunderbird (className =~? "thunderbird")
   runMaybe nmApplet    (name      =~? "nm")
 
+-- }}}
+
+-- ManageHook {{{
+
 myManageHook = (composeAll . concat $
-  [ [ resource  =? r    --> doIgnore          | r <- ignores ]
-  , [ role     =~? r    --> doCenterFloat     | r <- matchFloats ]
-  , [ appName  =~? n    --> doCenterFloat     | n <- matchFloats ]
-  , [ name     =~? n    --> doCenterFloat     | n <- matchFloats ]
-  , [ className =? c    --> doCenterFloat     | c <- classFloats ]
-  , [ name     =~? n    --> doFullFloat       | n <- fullFloats ]
-  , [ name     =~? n    --> doCenterFloat     | n <- notifications ]
-  , [ className =? c    --> doShift "M"       | c <- mail ]
-  , [ name     =~? n    --> doShift "I"       | n <- im ]
+  [ [ resource   =? r    --> doIgnore          | r <- ignores ]
+  , [ role      =~? r    --> doCenterFloat     | r <- matchFloats ]
+  , [ appName   =~? n    --> doCenterFloat     | n <- matchFloats ]
+  , [ name      =~? n    --> doCenterFloat     | n <- matchFloats ]
+  , [ className  =? c    --> doCenterFloat     | c <- classFloats ]
+  , [ name      =~? n    --> doFullFloat       | n <- fullFloats ]
+  , [ name      =~? n    --> doCenterFloat     | n <- notifications ]
+  , [ className  =? c    --> doShift "M"       | c <- mail ]
+  , [ className =~? n    --> doShift "I"       | n <- im ]
   ]) <+> manageDocks
   where
     ignores       = ["desktop_window","stalonetray"]
@@ -150,7 +180,11 @@ myManageHook = (composeAll . concat $
     matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup","msg"]
     notifications = ["notify-dzen"]
     mail          = ["Thunderbird"]
-    im            = ["finch"]
+    im            = ["finch","pidgin"]
+
+-- }}}
+
+-- Main {{{
 
 main = do
   cleanUp
@@ -167,13 +201,15 @@ main = do
 
     , keys               = myKeys
     , workspaces         = myWorkspaces
-    , layoutHook         = avoidStruts $ smartBorders $ myLayout
+    , layoutHook         = myLayout
     , manageHook         = myManageHook <+> manageDocks
     , logHook            = dynamicLogWithPP $ myDzenPP (dzenMain++dzenExt)
     , startupHook        = myStartupHook
     }
 
--- IO
+-- }}}
+
+-- IO {{{
 
 connectedToExt :: IO Bool
 connectedToExt = do
@@ -185,31 +221,20 @@ connectedToExt = do
       reverse . dropWhile (not . isPrefixOf a) .
         reverse . dropWhile (not . isPrefixOf b)
 
-vol delta up = "amixer set Master " ++ show delta ++ "%" ++ if up then "+" else "-"
-
-xDoTool k w = io $ (runProcessWithInput "xdotool" ["text","--window",show w,k] "" >> return ())
-
 cleanUp :: IO ()
 cleanUp = runProcessWithInput "killall" ["stalonetray","dzen2","conky"] "" >> return ()
 
--- Helpers
+-- }}}
 
-stackToList :: W.Stack a -> [a]
-stackToList s = (reverse $ W.up s) ++ [W.focus s] ++ W.down s
-
-actualWS s ss = case filter ((s ==) . W.tag) $ W.workspaces ss of
-  []    -> Nothing
-  (w:_) -> Just w
-
-getNames ws = mapM (\w->runProcessWithInput "xdotool" ["getwindowname",show w] "") ws
-
-windowsOfWS ws ss = case actualWS ws ss of
-  Nothing -> []
-  Just w  -> case W.stack w of
-    Nothing   -> []
-    Just wins -> stackToList wins
+-- Helpers {{{
 
 pipe :: [(String,[String])] -> String -> IO String
 pipe [] res              = return res
 pipe ((c,args):rest) res = runProcessWithInput c args res >>= pipe rest
+
+volUp d = vol d True
+volDown d = vol d False
+vol delta up = "amixer set Master " ++ show delta ++ "%" ++ if up then "+" else "-"
+
+-- }}}
 

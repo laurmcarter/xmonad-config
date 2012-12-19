@@ -61,6 +61,7 @@ namedSM smc xc title km = do
     maxLineLen = maximum $ length title : map (\(k,t,_)->1 + length k + length t) km
     maxKeyLen = maximum $ map (\(k,_,_)->length k) km
 
+alignDzen :: SMConfig -> Int -> (String, String, X ()) -> String
 alignDzen smc len (k,t,_) = "^pa(10)" ++ k ++ "^pa("++show ((round (fontWidth smc * fromIntegral len)) + gap smc)++")"++t
 
 reduceKeys :: [(a,b,c)] -> [(a,c)]
