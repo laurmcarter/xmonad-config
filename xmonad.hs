@@ -71,7 +71,7 @@ myLayout     = avoidStruts $ smartBorders $
     nmaster = 1
     delta = 3 / 100
     ratio = 1 / 2
-    im = withIM 0.15 (Role "buddy_list") Full
+    im = withIM 0.2 (Role "buddy_list") Full
 
 -- }}}
 
