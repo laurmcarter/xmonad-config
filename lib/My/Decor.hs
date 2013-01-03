@@ -27,7 +27,7 @@ myFont        = "-*-terminus-medium-r-normal-*-12-*-*-*-*-*-*-*"
 --myFont        = "Droid Sans Mono:size=8"
 
 normal  = CS { fg = "#ffffff" , bg = "#000000" }
-urgent  = CS { fg = "#0099ff" , bg = "#0077ff" }
+urgent  = CS { fg = "#ffffff" , bg = "#ff0000" }
 focused = CS { fg = "#f0f0f0" , bg = "#333333" }
 borders = CS { fg = "#433ffe" , bg = "#010062" }
 
@@ -38,7 +38,7 @@ myDzenPP hs = myMod defaultPP
       , ppVisible = clickWS (ppVisible pp)
       , ppHidden = clickWS (dzenColor "gray" "" . ppHidden pp)
       , ppOutput = sequence_ . mapM hPutStrLn hs
-      , ppUrgent = clickWS (dzenColor "red" "green" . ppUrgent pp)
+      , ppUrgent = clickWS (dzenColor (fg urgent) (bg urgent) . ppUrgent pp)
       }
 
 goToWS ws = "xdotool key 'super+" ++ ws ++ "'"
@@ -51,8 +51,8 @@ myXPConfig = defaultXPConfig
   { font = myFont
   , bgColor = bg normal
   , fgColor = fg normal
-  , fgHLight = fg normal
-  , bgHLight = bg urgent
+  , fgHLight = fg focused
+  , bgHLight = bg focused
   , borderColor = fg borders
   , promptBorderWidth = 1
   , historySize = 100
