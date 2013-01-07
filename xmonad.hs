@@ -97,8 +97,8 @@ myKeys conf = mkKeymap conf $
         , ( "M-S-<Tab>"     , "Cycle Screens"           , cycleScreensWith myView )
         , ( "M-<Backspace>" , "Toggle WS"               , toggleWS' ["1"] )
         , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --restart" )
-        , ( "M-S-q"         , "Logout"                  , io $ exitWith ExitSuccess )
-        , ( "M-S-<F4>"      , "Shut Down"               , spawn "poweroff" )
+        , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )
+        , ( "M-C-<F4>"      , "Shut Down"               , spawn "poweroff" )
         , ( "<XF86AudioRaiseVolume>" , "Vol Up"         , spawn $ volUp 5 )
         , ( "<XF86AudioLowerVolume>" , "Vol Down"       , spawn $ volDown 5 )
         ---- application keys ----
