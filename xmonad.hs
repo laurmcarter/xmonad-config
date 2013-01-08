@@ -80,8 +80,9 @@ myLayout     = avoidStruts $ smartBorders $
 myModKey     = mod4Mask
 
 myKeys conf = mkKeymap conf $
-    ---- app keys ----
+    ---- show keys ----
     ( "M-k"          , sm "Keys" topLevelKeys) :
+    ---- actual bindings ----
     reduceKeys topLevelKeys ++
     [ ("M-" ++ m ++ w, f w)
       | (f,m) <- [(myView, ""), (myShift, "S-")]
@@ -89,60 +90,63 @@ myKeys conf = mkKeymap conf $
     ]
     where
       topLevelKeys =
+        ---- nav ----
         [ ( "M-S-m"         , "View Mail"               , workspaceOnScreen wsMap W.view "M" )
         , ( "M-S-i"         , "View IM"                 , workspaceOnScreen wsMap W.view "I" )
-        , ( "<Print>"       , "Screenshot"              , spawn "scrot" )
-        , ( "M-S-l"         , "Lock"                    , spawn "slock" )
         , ( "M-<Tab>"       , "Cycle Windows"           , windows W.focusDown )
         , ( "M-S-<Tab>"     , "Cycle Screens"           , cycleScreensWith myView )
-        , ( "M-<Backspace>" , "Toggle WS"               , toggleWS' ["1"] )
+        , ( "M-j"           , "Focus Down"              , windows W.focusUp )
+        , ( "M-k"           , "Focus Up"                , windows W.focusDown )
+        ---- session ----
         , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --restart" )
         , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )
         , ( "M-C-<F4>"      , "Shut Down"               , spawn "poweroff" )
+        ---- utils ----
+        , ( "M-S-l"         , "Lock"                    , spawn "slock" )
+        , ( "<Print>"       , "Screenshot"              , spawn "scrot" )
         , ( "<XF86AudioRaiseVolume>" , "Vol Up"         , spawn $ volUp 5 )
         , ( "<XF86AudioLowerVolume>" , "Vol Down"       , spawn $ volDown 5 )
-        ---- application keys ----
-        , ( "M-x"           , "Applications Keys"       , sm "Applications" $
-          [ ( "<Return>"      , "Terminal"                , spawn myTerminal )
-          , ( "b"             , "Browser"                 , spawn myBrowser )
-          , ( "p"             , "DMenu"                   , spawn "dmenu_run -p '>>>'" )
-          , ( "c"             , "Qalculate"               , spawn "qalculate-gtk" )
-          , ( "l"             , "GColor"                  , spawn "gcolor2" )
-          , ( "v"             , "Evince"                  , spawn "evince" )
-          , ( "o"             , "Xprop"                   , spawn "xprop > /home/kcarter/.xprop" )
-          , ( "x"             , "Kill Window"             , kill )
-          , ( "M-x"           , "Kill Window"             , kill )
-          ] )
-        ---- window keys ----
-        , ( "M-w"          , "Windows Keys"             , sm "Windows" $
-          [ ( "<Return>"     , "Swap Master"              , windows W.swapMaster )
-          , ( "S-j"          , "Swap Down"                , windows W.swapDown )
-          , ( "S-k"          , "Swap Up"                  , windows W.swapUp )
-          , ( "j"            , "Focus Up"                 , windows W.focusUp )
-          , ( "k"            , "Focus Down"               , windows W.focusDown )
-          , ( "h"            , "Shrink"                   , sendMessage Shrink )
-          , ( "l"            , "Expand"                   , sendMessage Expand )
-          , ( "+"            , "Inc # Master"             , sendMessage (IncMasterN 1) )
-          , ( "-"            , "Dec # Master"             , sendMessage (IncMasterN (-1)) )
-          ] )
-        ---- workspace keys ----
-        , ( "M-s"          , "Prompts Keys"             , sm "Prompts" $
-          [ ( "p"          , "WS Prompt (view)"           , workspacePrompt myXPConfig (windows . W.view) )
-          , ( "S-p"        , "WS Prompt (shift)"          , workspacePrompt myXPConfig (windows . W.shift) )
-          , ( "s"          , "Shell Prompt"               , shellPrompt myXPConfig )
-          , ( "x"          , "XMonad Prompt"              , xmonadPrompt myXPConfig )
-          , ( "e"          , "View Empty WS"              , viewEmptyWorkspace )
-          , ( "S-e"        , "Shift to Empty WS"          , tagToEmptyWorkspace )
-          , ( "S-m"        , "Shift to Mail"              , windows $ W.shift "M" )
-          , ( "S-i"        , "Shift to IM"                , windows $ W.shift "I" )
-          ] )
-        ---- layout keys ----
-        , ( "M-a"          , "Layouts Keys"             , sm "Layouts" $
-          [ ( "<Return>"   , "Sink Window"                , withFocused $ windows . W.sink )
-          , ( "a"          , "Next Layout"                , sendMessage NextLayout )
-          , ( "M-a"        , "Next Layout"                , sendMessage NextLayout )
-          , ( "r"          , "First Layout"               , sendMessage FirstLayout )
-          ] )
+        ---- submaps ----
+        , ( "M-x"          , "Applications Keys"        , sm "Applications" applicationMap )
+        , ( "M-w"          , "Windows Keys"             , sm "Windows" windowMap )
+        , ( "M-s"          , "Prompts Keys"             , sm "Prompts" workspaceMap )
+        , ( "M-a"          , "Layouts Keys"             , sm "Layouts" layoutMap )
+        ]
+      applicationMap =
+        [ ( "<Return>"      , "Terminal"                , spawn myTerminal )
+        , ( "b"             , "Browser"                 , spawn myBrowser )
+        , ( "p"             , "DMenu"                   , spawn "dmenu_run -p '>>>'" )
+        , ( "c"             , "Qalculate"               , spawn "qalculate-gtk" )
+        , ( "l"             , "GColor"                  , spawn "gcolor2" )
+        , ( "v"             , "Evince"                  , spawn "evince" )
+        , ( "o"             , "Xprop"                   , spawn "xprop > /home/kcarter/.xprop" )
+        , ( "x"             , "Kill Window"             , kill )
+        , ( "M-x"           , "Kill Window"             , kill )
+        ]
+      windowMap =
+        [ ( "<Return>"     , "Swap Master"              , windows W.swapMaster )
+        , ( "S-j"          , "Swap Down"                , windows W.swapDown )
+        , ( "S-k"          , "Swap Up"                  , windows W.swapUp )
+        , ( "h"            , "Shrink"                   , sendMessage Shrink )
+        , ( "l"            , "Expand"                   , sendMessage Expand )
+        , ( "+"            , "Inc # Master"             , sendMessage (IncMasterN 1) )
+        , ( "-"            , "Dec # Master"             , sendMessage (IncMasterN (-1)) )
+        ]
+      workspaceMap =
+        [ ( "p"          , "WS Prompt (view)"           , workspacePrompt myXPConfig (windows . W.view) )
+        , ( "S-p"        , "WS Prompt (shift)"          , workspacePrompt myXPConfig (windows . W.shift) )
+        , ( "s"          , "Shell Prompt"               , shellPrompt myXPConfig )
+        , ( "x"          , "XMonad Prompt"              , xmonadPrompt myXPConfig )
+        , ( "e"          , "View Empty WS"              , viewEmptyWorkspace )
+        , ( "S-e"        , "Shift to Empty WS"          , tagToEmptyWorkspace )
+        , ( "S-m"        , "Shift to Mail"              , windows $ W.shift "M" )
+        , ( "S-i"        , "Shift to IM"                , windows $ W.shift "I" )
+        ]
+      layoutMap =
+        [ ( "<Return>"   , "Sink Window"                , withFocused $ windows . W.sink )
+        , ( "a"          , "Next Layout"                , sendMessage NextLayout )
+        , ( "M-a"        , "Next Layout"                , sendMessage NextLayout )
+        , ( "r"          , "First Layout"               , sendMessage FirstLayout )
         ]
       sm = namedSM mySMConfig conf
       myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
