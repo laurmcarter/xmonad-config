@@ -54,8 +54,8 @@ nmApplet     = spawn "nm-applet"
 
 -- Workspaces {{{
 
-wsMap = (onScreen 0 ["1","2","3","4","M","I"]) ++
-        (onScreen 1 ["5","6","7","8","9"])
+wsMap = (onScreen 1 ["1","2","3","4","5"]) ++
+        (onScreen 0 ["6","7","8","9","M","I"])
 
 myWorkspaces = (map show [1..9]) ++ ["M","I"]
 
@@ -157,8 +157,8 @@ myKeys conf = mkKeymap conf $
 -- StartupHook {{{
 
 myStartupHook = do
-  --runMaybe finch       (name      =~? "finch")
-  runMaybe pidgin      (className =~? "pidgin")
+  pidgin
+  --runMaybe pidgin      (className =~? "pidgin")
   runMaybe thunderbird (className =~? "thunderbird")
   runMaybe nmApplet    (name      =~? "nm")
 
