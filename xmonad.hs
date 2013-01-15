@@ -157,7 +157,7 @@ myKeys conf = mkKeymap conf $
 -- StartupHook {{{
 
 myStartupHook = do
-  pidgin
+  --pidgin
   --runMaybe pidgin      (className =~? "pidgin")
   runMaybe thunderbird (className =~? "thunderbird")
   runMaybe nmApplet    (name      =~? "nm")
