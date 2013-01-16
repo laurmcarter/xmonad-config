@@ -12,20 +12,25 @@ import Control.Monad (when)
 
 import My.Decor
 
-mySBarsStart =                                   0
-mySBars      = [ (dzenBar "l"               ,  450) ]
+mon0x = 1920
+mon1x = 1280
 
-myBarsStart  =                                 450
-myBars       = [ (conkyBar ".conkytime" "c" ,  830)
-               , (conkyBar ".conkytop"  "r" , 1200)
-               , (stalonetray               , 1280)
-               ]
+mySBarsStart w =                                 0
+mySBars      w = [ (dzenBar "l"               ,  myBarsStart w) ]
 
-sbarsMain = bars mySBarsStart mySBars
-barsMain  = bars myBarsStart myBars
+myBarsStart  w =                                half w - 200
+myBars       w = [ (conkyBar ".conkytime" "c" , half w + 200)
+                 , (conkyBar ".conkytop"  "r" , w - 80)
+                 , (stalonetray               , w)
+                 ]
 
-sbarsExternal = bars (mySBarsStart+1280) $ map (second (+1280)) mySBars
-barsExternal  = bars (myBarsStart+1280) $ map (second (+1280)) myBars
+half = (`div` 2)
+
+sbarsMain = bars (mySBarsStart mon0x) (mySBars mon0x)
+barsMain  = bars (myBarsStart mon0x) (myBars mon0x)
+
+sbarsExternal = bars (mySBarsStart mon1x + mon0x) (map (second (+ mon0x)) (mySBars mon1x))
+barsExternal  = bars (myBarsStart mon1x + mon0x) (map (second (+ mon0x)) (myBars mon1x))
 
 ---------------------------------------------------------------------
 
@@ -35,6 +40,7 @@ statusBarMain  = statusBar sbarsMain barsMain
 statusBarExternal :: Bool -> IO [Handle]
 statusBarExternal  = statusBar sbarsExternal barsExternal
 
+statusBar :: [String] -> [String] -> Bool -> IO [Handle]
 statusBar sts cs shouldRun = do
   when shouldRun $ mapM_ spawnPipe cs
   if shouldRun

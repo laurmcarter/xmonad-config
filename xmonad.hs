@@ -27,6 +27,8 @@ import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
 import XMonad.Actions.Warp (warpToWindow)
 import XMonad.Actions.CycleWS (toggleWS')
 
+import Control.Applicative ((<$>))
+import Control.Monad (void)
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower)
 import Data.Maybe (fromJust)
@@ -43,10 +45,11 @@ import My.QueryHelpers
 
 -- Applications {{{
 
+myExtMon     = "DP2"
 myTerminal   = "gnome-terminal"
 myBrowser    = "google-chrome"
 finch        = runInTerm "--geometry 1278x782 -t finch" "finch"
-pidgin       = spawn "pidgin"
+pidgin       = spawn "pidgin" :: X ()
 thunderbird  = spawn "thunderbird"
 nmApplet     = spawn "nm-applet"
 
@@ -98,7 +101,7 @@ myKeys conf = mkKeymap conf $
         , ( "M-j"           , "Focus Down"              , windows W.focusUp )
         , ( "M-k"           , "Focus Up"                , windows W.focusDown )
         ---- session ----
-        , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --restart" )
+        , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --recompile && xmonad --restart" )
         , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )
         , ( "M-C-<F4>"      , "Shut Down"               , spawn "poweroff" )
         ---- utils ----
@@ -193,7 +196,7 @@ myManageHook = (composeAll . concat $
 main = do
   cleanUp
   dzenMain <- statusBarMain True
-  ext      <- connectedToExt
+  ext      <- connectedToExt myExtMon
   dzenExt  <- statusBarExternal ext
   xmonad $ withUrgencyHook NoUrgencyHook $ defaultConfig
     { modMask            = myModKey
@@ -215,18 +218,22 @@ main = do
 
 -- IO {{{
 
-connectedToExt :: IO Bool
-connectedToExt = do
-  o <- pipe [ ("xrandr",[]) ] ""
-  let ls = between "VGA1" "HDMI1" $ split '\n' o
-  return $ any (elem '*') ls
+connectedToExt :: String -> IO Bool
+connectedToExt mon = any (elem '*') <$> under <$> lines <$> pipe [ ("xrandr",[]) ] ""
   where
-    between b a =
-      reverse . dropWhile (not . isPrefixOf a) .
-        reverse . dropWhile (not . isPrefixOf b)
+    under ls =
+      let ls' = dropWhile (not . isPrefixOf mon) ls in
+        head ls' : (keepUntil (not . isPrefixOf " ") $ tail ls')
+
+keepUntil :: (a -> Bool) -> [a] -> [a]
+keepUntil p as = case as of
+  [] -> []
+  a:as'
+    | p a ->       []
+    | otherwise -> a : keepUntil p as'
 
 cleanUp :: IO ()
-cleanUp = runProcessWithInput "killall" ["stalonetray","dzen2","conky"] "" >> return ()
+cleanUp = void $ runProcessWithInput "killall" ["stalonetray","dzen2","conky"] ""
 
 -- }}}
 
