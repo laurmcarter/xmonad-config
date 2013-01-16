@@ -48,7 +48,7 @@ import My.QueryHelpers
 myExtMon     = "DP2"
 myTerminal   = "gnome-terminal"
 myBrowser    = "google-chrome"
-finch        = runInTerm "--geometry 1278x782 -t finch" "finch"
+irssi        = runInTerm "-t irssi" "irssi"
 pidgin       = spawn "pidgin" :: X ()
 thunderbird  = spawn "thunderbird"
 nmApplet     = spawn "nm-applet"
@@ -67,7 +67,7 @@ myWorkspaces = (map show [1..9]) ++ ["M","I"]
 -- Layouts {{{
 
 myLayout     = avoidStruts $ smartBorders $ 
-  onWorkspace "I" im $
+  --onWorkspace "I" im $
   tiled ||| Mirror tiled ||| Full
   where
     tiled = Tall nmaster delta ratio
@@ -161,7 +161,7 @@ myKeys conf = mkKeymap conf $
 
 myStartupHook = do
   --pidgin
-  --runMaybe pidgin      (className =~? "pidgin")
+  runMaybe irssi       (name      =~? "irssi")
   runMaybe thunderbird (className =~? "thunderbird")
   runMaybe nmApplet    (name      =~? "nm")
 
@@ -178,7 +178,7 @@ myManageHook = (composeAll . concat $
   , [ name      =~? n    --> doFullFloat       | n <- fullFloats ]
   , [ name      =~? n    --> doCenterFloat     | n <- notifications ]
   , [ className  =? c    --> doShift "M"       | c <- mail ]
-  , [ className =~? n    --> doShift "I"       | n <- im ]
+  , [ name      =~? n    --> doShift "I"       | n <- im ]
   ]) <+> manageDocks
   where
     ignores       = ["desktop_window","stalonetray"]
@@ -187,7 +187,7 @@ myManageHook = (composeAll . concat $
     matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup","msg"]
     notifications = ["notify-dzen"]
     mail          = ["Thunderbird"]
-    im            = ["finch","pidgin"]
+    im            = ["irssi","pidgin"]
 
 -- }}}
 
