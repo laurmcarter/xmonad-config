@@ -7,7 +7,7 @@ import qualified XMonad.StackSet as W
 import XMonad.Hooks.ManageHelpers (doCenterFloat,doFullFloat)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks)
 import XMonad.Hooks.DynamicLog (dynamicLogWithPP)
-import XMonad.Hooks.UrgencyHook (withUrgencyHook,NoUrgencyHook(..))
+import XMonad.Hooks.UrgencyHook (withUrgencyHookC,urgencyConfig,UrgencyConfig(..),SuppressWhen(..),dzenUrgencyHook,NoUrgencyHook(..))
 
 import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Layout.IM (withIM, Property(..))
@@ -46,12 +46,18 @@ import My.QueryHelpers
 -- Applications {{{
 
 myExtMon     = "DP2"
-myTerminal   = "gnome-terminal"
+myTerminal   = "urxvt"
 myBrowser    = "google-chrome"
 irssi        = runInTerm "-t irssi" "irssi"
 pidgin       = spawn "pidgin" :: X ()
 thunderbird  = spawn "thunderbird"
 nmApplet     = spawn "nm-applet"
+
+-- }}}
+
+-- Urgency Config {{{
+
+myUrgencyConfig = urgencyConfig { suppressWhen = Focused }
 
 -- }}}
 
@@ -160,7 +166,6 @@ myKeys conf = mkKeymap conf $
 -- StartupHook {{{
 
 myStartupHook = do
-  --pidgin
   runMaybe irssi       (name      =~? "irssi")
   runMaybe thunderbird (className =~? "thunderbird")
   runMaybe nmApplet    (name      =~? "nm")
@@ -198,21 +203,20 @@ main = do
   dzenMain <- statusBarMain True
   ext      <- connectedToExt myExtMon
   dzenExt  <- statusBarExternal ext
-  xmonad $ withUrgencyHook NoUrgencyHook $ defaultConfig
-    { modMask            = myModKey
-    , terminal           = myTerminal
-
-    , borderWidth        = myBorderWidth
-    , normalBorderColor  = bg borders
-    , focusedBorderColor = fg borders
-
-    , keys               = myKeys
-    , workspaces         = myWorkspaces
-    , layoutHook         = myLayout
-    , manageHook         = myManageHook <+> manageDocks
-    , logHook            = dynamicLogWithPP $ myDzenPP (dzenMain++dzenExt)
-    , startupHook        = myStartupHook
-    }
+  xmonad $ withUrgencyHookC NoUrgencyHook myUrgencyConfig $
+    defaultConfig
+      { modMask            = myModKey
+      , terminal           = myTerminal
+      , borderWidth        = myBorderWidth
+      , normalBorderColor  = bg borders
+      , focusedBorderColor = fg borders
+      , keys               = myKeys
+      , workspaces         = myWorkspaces
+      , layoutHook         = myLayout
+      , manageHook         = myManageHook <+> manageDocks
+      , logHook            = dynamicLogWithPP $ myDzenPP (dzenMain++dzenExt)
+      , startupHook        = myStartupHook
+      }
 
 -- }}}
 

@@ -15,9 +15,11 @@ module My.Decor
 
 import XMonad.Prompt
 import XMonad.Hooks.DynamicLog
+import XMonad.Util.WorkspaceCompare
 
 import My.NamedSubmap
 
+import Data.Char
 import Data.Word (Word32)
 import System.IO (hPutStrLn)
 
@@ -31,21 +33,33 @@ urgent  = CS { fg = "#ffffff" , bg = "#ff0000" }
 focused = CS { fg = "#f0f0f0" , bg = "#333333" }
 borders = CS { fg = "#433ffe" , bg = "#010062" }
 
-myDzenPP hs = myMod defaultPP
- where
-    myMod pp = pp
-      { ppCurrent = clickWS (dzenColor "lightgreen" "" . ppCurrent pp)
-      , ppVisible = clickWS (ppVisible pp)
-      , ppHidden = clickWS (dzenColor "gray" "" . ppHidden pp)
-      , ppOutput = sequence_ . mapM hPutStrLn hs
-      , ppUrgent = clickWS (dzenColor (fg urgent) (bg urgent) . ppUrgent pp)
-      }
+myDzenPP hs = PP 
+  { ppCurrent         = clickWS (dzenColor "lightgreen" "" . wrap "[" "]")
+  , ppVisible         = clickWS (wrap "<" ">")
+  , ppHidden          = clickWS (dzenColor "grey" "" . pad)
+  , ppHiddenNoWindows = const ""
+  , ppUrgent          = clickWS (dzenColor (fg urgent) (bg urgent) . pad)
+  , ppSep             = " : "
+  , ppWsSep           = ""
+  , ppTitle           = shorten 80
+  , ppLayout          = id
+  , ppOrder           = id
+  , ppOutput          = sequence_ . mapM hPutStrLn hs
+  , ppSort            = getSortByIndex
+  , ppExtras          = []
+  }
 
-goToWS ws = "xdotool key 'super+" ++ ws ++ "'"
-clickable c s = "^ca(1," ++ c ++ ")" ++ s ++ "^ca()"
-clickWS f ws = case ws of
-  "M" -> clickable "xdotool key 'super+shift+m'" $ f ws
-  _   -> clickable (goToWS ws) $ f ws
+clickWS f ws = if (length ws == 0)
+  then s
+  else buildCmd s
+  where
+  buildCmd s = "^ca(1," ++ cmd ++ ")" ++ s ++ "^ca()"
+  cmd = if (isDigit c)
+    then "xdotool key 'super+" ++ ws ++ "'"
+    else "xdotool key 'super+shift+" ++ [toLower c] ++ "'"
+  c = head ws 
+  s = f ws
+
 
 myXPConfig = defaultXPConfig
   { font = myFont
