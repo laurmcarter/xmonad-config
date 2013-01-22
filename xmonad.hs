@@ -121,9 +121,17 @@ myKeys conf = mkKeymap conf $
     , ( volUpKey        , "Vol Down"                , spawn $ volDown 5 )
     ---- submaps ----
     , ( "M-x"           , "Applications Keys"       , sm   "Applications" applicationMap )
-    , ( "M-s"           , "Prompts Keys"            , sm   "Prompts"      workspaceMap )
-    , ( "M-w"           , "Windows Keys"            , mode "Windows"      windowMap )
-    , ( "M-a"           , "Layouts Keys"            , mode "Layouts"      layoutMap )
+    , ( "M-p"           , "Prompts Keys"            , sm   "Prompts"      promptMap )
+    , ( "M-w"           , "Windows Mode"            , mode "Windows"      windowMap )
+    , ( "M-a"           , "Layouts Mode"            , mode "Layouts"      layoutMap )
+    , ( "M-S-w"         , "Workspace Mode"          , mode "Workspaces"   workspaceMap )
+    ]
+  workspaceMap =
+    [ ( w               , "View " ++ w              , myView w ) | w <- allNumberWorkspaces conf ] ++
+    [ ( "m"             , "View M"                  , myView "M" )
+    , ( "i"             , "View I"                  , myView "I" )
+    , ( "<Tab>"         , "Cycle Windows"           , windows W.focusDown )
+    , ( "S-<Tab>"       , "Cycle Screens"           , cycleScreensWith myView )
     ]
   applicationMap =
     [ ( "<Return>"      , "Terminal"                , spawn myTerminal )
@@ -145,7 +153,7 @@ myKeys conf = mkKeymap conf $
     , ( "+"            , "Inc # Master"             , sendMessage (IncMasterN 1) )
     , ( "-"            , "Dec # Master"             , sendMessage (IncMasterN (-1)) )
     ]
-  workspaceMap =
+  promptMap =
     [ ( "p"          , "WS Prompt (view)"           , workspacePrompt myXPConfig (windows . W.view) )
     , ( "S-p"        , "WS Prompt (shift)"          , workspacePrompt myXPConfig (windows . W.shift) )
     , ( "s"          , "Shell Prompt"               , shellPrompt myXPConfig )
@@ -161,7 +169,7 @@ myKeys conf = mkKeymap conf $
     , ( "M-a"        , "Next Layout"                , sendMessage NextLayout )
     , ( "r"          , "First Layout"               , sendMessage FirstLayout )
     ]
-  mode = modeSM mySMConfig conf "<Escape>"
+  mode = modeSM mySMConfig conf Nothing
   sm = namedSM mySMConfig conf
   myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
   myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5

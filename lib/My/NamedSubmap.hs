@@ -11,6 +11,8 @@ import XMonad
 import XMonad.Actions.Submap
 import XMonad.Util.EZConfig
 
+import Control.Arrow
+import qualified Data.Map as M
 import System.Process
 import System.IO
 import Data.List (intercalate)
@@ -36,10 +38,10 @@ defaultSMConfig = SMConfig
  , bgDzen = "#808080"
  }
 
-modeSM :: SMConfig -> XConfig a -> String -> String -> [(String,String,X ())] -> X ()
-modeSM smc xc exit title km = 
+modeSM :: SMConfig -> XConfig a -> Maybe String -> String -> [(String,String,X ())] -> X ()
+modeSM smc xc mexit title km = 
   namedSM smc xc title $
-    (exit,"Exit Mode",return ()) : km'
+    maybe id (\k -> ((k,"Exit Mode",return ()) :)) mexit $ km'
   where
   km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
 
