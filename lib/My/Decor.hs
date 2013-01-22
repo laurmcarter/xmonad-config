@@ -74,7 +74,6 @@ myXPConfig = defaultXPConfig
 
 mySMConfig = defaultSMConfig
   { gap = 50
-  , fontWidth = 6.5
   , dzenFont  = Just myFont
   }
 

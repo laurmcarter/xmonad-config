@@ -3,6 +3,7 @@ module My.NamedSubmap
   ( SMConfig(..)
   , defaultSMConfig
   , namedSM
+  , modeSM
   , reduceKeys
   ) where
 
@@ -30,10 +31,17 @@ defaultSMConfig = SMConfig
  , yPos = 20
  , gap = 20
  , dzenFont  = Nothing
- , fontWidth = 12.0
+ , fontWidth = 11.5
  , fgDzen = "#ffffff"
  , bgDzen = "#808080"
  }
+
+modeSM :: SMConfig -> XConfig a -> String -> String -> [(String,String,X ())] -> X ()
+modeSM smc xc exit title km = 
+  namedSM smc xc title $
+    (exit,"Exit Mode",return ()) : km'
+  where
+  km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
 
 namedSM :: SMConfig -> XConfig a -> String -> [(String,String,X())] -> X ()
 namedSM smc xc title km = do
