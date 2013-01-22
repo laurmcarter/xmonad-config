@@ -17,6 +17,7 @@ import System.Process
 import System.IO
 import Data.List (intercalate)
 
+-- | Configuration for popup Dzen.
 data SMConfig = SMConfig
   { xPos      :: Int
   , yPos      :: Int
@@ -38,6 +39,9 @@ defaultSMConfig = SMConfig
  , bgDzen = "#808080"
  }
 
+-- | Named Submap that reenters itself upon taking an action.
+--   Any keypress not in the submap exits the map.
+--   An exit key binding may be explicitly provided.
 modeSM :: SMConfig -> XConfig a -> Maybe String -> String -> [(String,String,X ())] -> X ()
 modeSM smc xc mexit title km = 
   namedSM smc xc title $
@@ -45,6 +49,8 @@ modeSM smc xc mexit title km =
   where
   km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
 
+-- | Self-advertising submap that pops up a temporary, roll-open dzen window describing the
+--   available keybindings.
 namedSM :: SMConfig -> XConfig a -> String -> [(String,String,X())] -> X ()
 namedSM smc xc title km = do
   pid <- io $ do
@@ -74,6 +80,7 @@ namedSM smc xc title km = do
 alignDzen :: SMConfig -> Int -> (String, String, X ()) -> String
 alignDzen smc len (k,t,_) = "^pa(10)" ++ k ++ "^pa("++show ((round (fontWidth smc * fromIntegral len)) + gap smc)++")"++t
 
+-- | Takes a named keymap list and reduces it to a normal associative list.
 reduceKeys :: [(a,b,c)] -> [(a,c)]
 reduceKeys = map (\(x,_,y)->(x,y))
 

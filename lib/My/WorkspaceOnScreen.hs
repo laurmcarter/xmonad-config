@@ -2,14 +2,30 @@
 module My.WorkspaceOnScreen
   ( onScreen
   , workspaceOnScreen
+  , WSMap
   ) where
 
-import XMonad (windows,screenWorkspace,whenJust)
+import XMonad
+  ( windows
+  , screenWorkspace
+  , whenJust
+  , WorkspaceId
+  , ScreenId
+  , WindowSet
+  , X (..)
+  )
 
-onScreen i ws = [ (w,i) | w <- ws ]
+import qualified Data.Map as Map
 
+type WSMap = Map.Map WorkspaceId ScreenId 
+
+onScreen :: ScreenId -> [WorkspaceId] -> WSMap
+onScreen i ws = Map.fromList [ (w,i) | w <- ws ]
+
+workspaceOnScreen ::
+  WSMap -> (WorkspaceId -> WindowSet -> WindowSet) -> WorkspaceId -> X ()
 workspaceOnScreen m f w =
-  case lookup w m of
+  case Map.lookup w m of
     Nothing -> return ()
     Just s  ->
       do mws <- screenWorkspace s

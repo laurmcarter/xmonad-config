@@ -33,6 +33,7 @@ import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower,isDigit)
 import Data.Maybe (fromJust)
 import System.Exit (exitWith,ExitCode(..))
+import qualified Data.Map as M
 
 import My.Bars
 import My.Decor
@@ -49,24 +50,18 @@ myExtMon     = "DP2"
 myTerminal   = "urxvt"
 myBrowser    = "google-chrome"
 irssi        = runInTerm "-t irssi" "irssi"
-pidgin       = spawn "pidgin" :: X ()
 thunderbird  = spawn "thunderbird"
 nmApplet     = spawn "nm-applet"
 
 -- }}}
 
--- Urgency Config {{{
-
-myUrgencyConfig = urgencyConfig { suppressWhen = Focused }
-
--- }}}
-
 -- Workspaces {{{
 
-wsMap = (onScreen 1 ["1","2","3","4","5"]) ++
-        (onScreen 0 ["6","7","8","9","M","I"])
+wsMap = M.union
+  (onScreen 1 ["1","2","3","4","5"])
+  (onScreen 0 ["6","7","8","9","M","I"])
 
-myWorkspaces = (map show [1..9]) ++ ["M","I"]
+myWorkspaces = M.keys wsMap
 
 -- }}}
 
@@ -117,8 +112,8 @@ myKeys conf = mkKeymap conf $
     ---- utils ----
     , ( "M-S-l"         , "Lock"                    , spawn "slock" )
     , ( "<Print>"       , "Screenshot"              , spawn "scrot" )
-    , ( volUpKey        , "Vol Up"                  , spawn $ volUp 5 )
-    , ( volUpKey        , "Vol Down"                , spawn $ volDown 5 )
+    , ( volUpKey        , "Vol Up"                  , volUp 5 )
+    , ( volUpKey        , "Vol Down"                , volDown 5 )
     ---- submaps ----
     , ( "M-x"           , "Applications Keys"       , sm   "Applications" applicationMap )
     , ( "M-p"           , "Prompts Keys"            , sm   "Prompts"      promptMap )
@@ -211,6 +206,12 @@ myManageHook = (composeAll . concat $
 
 -- }}}
 
+-- Urgency Config {{{
+
+myUrgencyConfig = urgencyConfig { suppressWhen = Focused }
+
+-- }}}
+
 -- Main {{{
 
 main = do
@@ -262,9 +263,16 @@ pipe :: [(String,[String])] -> String -> IO String
 pipe [] res              = return res
 pipe ((c,args):rest) res = runProcessWithInput c args res >>= pipe rest
 
-volUp d = vol d True
-volDown d = vol d False
-vol delta up = "amixer set Master " ++ show delta ++ "%" ++ if up then "+" else "-"
+volUp = vol True
+volDown = vol False
+
+vol :: Bool -> Int -> X ()
+vol isUp delta = spawn ("amixer set Master " ++ show delta ++ "%" ++ dir isUp)
+  where
+  dir = branch "+" "-"
+
+branch :: a -> a -> Bool -> a
+branch t f b = if b then t else f
 
 -- }}}
 

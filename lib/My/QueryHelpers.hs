@@ -4,6 +4,7 @@ module My.QueryHelpers
   , name
   , (=/?)
   , (=~?)
+  , (=~/?)
   , runMaybe
   ) where
 
@@ -18,13 +19,17 @@ role = stringProperty "WM_WINDOW_ROLE"
 name = stringProperty "WM_NAME"
 
 (=/?)   :: Query String -> String -> Query Bool
-x =/? q  = fmap not $ x =? q
+q =/? x  = fmap not $ q =? x
 
 (=~?)   :: Query String -> String -> Query Bool
 q =~? x  = fmap (isInfixOf $ decap x) $ fmap decap q
+
+(=~/?)   :: Query String -> String -> Query Bool
+q =~/? x  = fmap not $ q =~? x 
 
 decap   :: String -> String
 decap    = map toLower
 
 runMaybe :: X () -> Query Bool -> X ()
 runMaybe f qry = ifWindow qry idHook f
+
