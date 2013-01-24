@@ -113,13 +113,18 @@ myKeys conf = mkKeymap conf $
     , ( "M-S-l"         , "Lock"                    , spawn "slock" )
     , ( "<Print>"       , "Screenshot"              , spawn "scrot" )
     , ( volUpKey        , "Vol Up"                  , volUp 5 )
-    , ( volUpKey        , "Vol Down"                , volDown 5 )
+    , ( volDownKey      , "Vol Down"                , volDown 5 )
     ---- submaps ----
     , ( "M-x"           , "Applications Keys"       , sm   "Applications" applicationMap )
     , ( "M-p"           , "Prompts Keys"            , sm   "Prompts"      promptMap )
     , ( "M-w"           , "Windows Mode"            , mode "Windows"      windowMap )
     , ( "M-a"           , "Layouts Mode"            , mode "Layouts"      layoutMap )
     , ( "M-S-w"         , "Workspace Mode"          , mode "Workspaces"   workspaceMap )
+    , ( "M-v"           , "Volume Mode"             , mode "Volume"       volumeMap )
+    ]
+  volumeMap =
+    [ ( plus_key        , "Up"                      , volUp 5 )
+    , ( "-"             , "Down"                    , volDown 5)
     ]
   workspaceMap =
     [ ( w               , "View " ++ w              , myView w ) | w <- allNumberWorkspaces conf ] ++
@@ -140,29 +145,29 @@ myKeys conf = mkKeymap conf $
     , ( "M-x"           , "Kill Window"             , kill )
     ]
   windowMap =
-    [ ( "<Return>"     , "Swap Master"              , windows W.swapMaster )
-    , ( "S-j"          , "Swap Down"                , windows W.swapDown )
-    , ( "S-k"          , "Swap Up"                  , windows W.swapUp )
-    , ( "h"            , "Shrink"                   , sendMessage Shrink )
-    , ( "l"            , "Expand"                   , sendMessage Expand )
-    , ( "+"            , "Inc # Master"             , sendMessage (IncMasterN 1) )
-    , ( "-"            , "Dec # Master"             , sendMessage (IncMasterN (-1)) )
+    [ ( "<Return>"      , "Swap Master"             , windows W.swapMaster )
+    , ( "S-j"           , "Swap Down"               , windows W.swapDown )
+    , ( "S-k"           , "Swap Up"                 , windows W.swapUp )
+    , ( "h"             , "Shrink"                  , sendMessage Shrink )
+    , ( "l"             , "Expand"                  , sendMessage Expand )
+    , ( plus_key        , "Inc # Master"            , sendMessage (IncMasterN 1) )
+    , ( "-"             , "Dec # Master"            , sendMessage (IncMasterN (-1)) )
     ]
   promptMap =
-    [ ( "p"          , "WS Prompt (view)"           , workspacePrompt myXPConfig (windows . W.view) )
-    , ( "S-p"        , "WS Prompt (shift)"          , workspacePrompt myXPConfig (windows . W.shift) )
-    , ( "s"          , "Shell Prompt"               , shellPrompt myXPConfig )
-    , ( "x"          , "XMonad Prompt"              , xmonadPrompt myXPConfig )
-    , ( "e"          , "View Empty WS"              , viewEmptyWorkspace )
-    , ( "S-e"        , "Shift to Empty WS"          , tagToEmptyWorkspace )
-    , ( "S-m"        , "Shift to Mail"              , windows $ W.shift "M" )
-    , ( "S-i"        , "Shift to IM"                , windows $ W.shift "I" )
+    [ ( "p"             , "WS Prompt (view)"        , workspacePrompt myXPConfig (windows . W.view) )
+    , ( "S-p"           , "WS Prompt (shift)"       , workspacePrompt myXPConfig (windows . W.shift) )
+    , ( "s"             , "Shell Prompt"            , shellPrompt myXPConfig )
+    , ( "x"             , "XMonad Prompt"           , xmonadPrompt myXPConfig )
+    , ( "e"             , "View Empty WS"           , viewEmptyWorkspace )
+    , ( "S-e"           , "Shift to Empty WS"       , tagToEmptyWorkspace )
+    , ( "S-m"           , "Shift to Mail"           , windows $ W.shift "M" )
+    , ( "S-i"           , "Shift to IM"             , windows $ W.shift "I" )
     ]
   layoutMap =
-    [ ( "<Return>"   , "Sink Window"                , withFocused $ windows . W.sink )
-    , ( "a"          , "Next Layout"                , sendMessage NextLayout )
-    , ( "M-a"        , "Next Layout"                , sendMessage NextLayout )
-    , ( "r"          , "First Layout"               , sendMessage FirstLayout )
+    [ ( "<Return>"      , "Sink Window"             , withFocused $ windows . W.sink )
+    , ( "a"             , "Next Layout"             , sendMessage NextLayout )
+    , ( "M-a"           , "Next Layout"             , sendMessage NextLayout )
+    , ( "r"             , "First Layout"            , sendMessage FirstLayout )
     ]
   mode = modeSM mySMConfig conf Nothing
   sm = namedSM mySMConfig conf
@@ -170,6 +175,7 @@ myKeys conf = mkKeymap conf $
   myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
   volUpKey = "<XF86AudioRaiseVolume>"
   volDownKey = "<XF86AudioLowerVolume>"
+  plus_key = "S-="
 
 -- }}}
 

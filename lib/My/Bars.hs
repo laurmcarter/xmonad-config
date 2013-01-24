@@ -66,7 +66,7 @@ dzenBar a x0 x1 = concat
   , "' -bg '"
   , bg normal
   , "' -fn '"
-  , myFont
+  , myFont 12
   , "'"
   ]
 

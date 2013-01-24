@@ -54,18 +54,18 @@ modeSM smc xc mexit title km =
 namedSM :: SMConfig -> XConfig a -> String -> [(String,String,X())] -> X ()
 namedSM smc xc title km = do
   pid <- io $ do
-    (i,o,e,pid) <- runInteractiveCommand (intercalate " " $
-      ([ "dzen2"
-       , "-fg" , "'" ++ fgDzen smc ++ "'"
-       , "-bg" , "'" ++ bgDzen smc ++ "'"
-       , "-x"  , show $ xPos smc
-       , "-y"  , show $ yPos smc
-       , "-ta" , "l"
-       , "-sa" , "l"
-       , "-l"  , show $ length km
-       , "-w"  , show ((round (fontWidth smc * fromIntegral maxLineLen)) + gap smc + 10)
-       ] ++ (maybe [] (\f->["-fn",f]) $ dzenFont smc)
-       ))
+    (i,o,e,pid) <- runInteractiveCommand $
+      cmdArgs "dzen2"
+        [ ( "-fg" , Just ("'" ++ fgDzen smc ++ "'")                                                )
+        , ( "-bg" , Just ("'" ++ bgDzen smc ++ "'")                                                )
+        , ( "-x"  , Just (show $ xPos smc)                                                         )
+        , ( "-y"  , Just (show $ yPos smc)                                                         )
+        , ( "-ta" , Just ("l")                                                                     )
+        , ( "-sa" , Just ("l")                                                                     )
+        , ( "-l"  , Just (show $ length km)                                                        )
+        , ( "-w"  , Just (show ((round (fontWidth smc * fromIntegral maxLineLen)) + gap smc + 10)) )
+        , ( "-fn" , dzenFont smc                                                                   )
+        ]
     hPutStrLn i ("^pa(10)"++title)
     mapM (hPutStrLn i . alignDzen smc maxKeyLen) km
     hFlush i
@@ -76,6 +76,10 @@ namedSM smc xc title km = do
     numLines = length km
     maxLineLen = maximum $ length title : map (\(k,t,_)->1 + length k + length t) km
     maxKeyLen = maximum $ map (\(k,_,_)->length k) km
+
+cmdArgs :: String -> [(String,Maybe String)] -> String
+cmdArgs cmd args = intercalate " " $ cmd :
+  concat (map (\(flag,marg) -> flag : maybe [] (:[]) marg) args)
 
 alignDzen :: SMConfig -> Int -> (String, String, X ()) -> String
 alignDzen smc len (k,t,_) = "^pa(10)" ++ k ++ "^pa("++show ((round (fontWidth smc * fromIntegral len)) + gap smc)++")"++t

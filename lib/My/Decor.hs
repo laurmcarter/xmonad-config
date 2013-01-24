@@ -25,7 +25,8 @@ import System.IO (hPutStrLn)
 
 myBorderWidth :: Word32
 myBorderWidth = 1
-myFont        = "-*-terminus-medium-r-normal-*-12-*-*-*-*-*-*-*"
+myFont :: Int -> String
+myFont s       = "-*-terminus-medium-r-normal-*-" ++ show s ++ "-*-*-*-*-*-*-*"
 --myFont        = "Droid Sans Mono:size=8"
 
 normal  = CS { fg = "#ffffff" , bg = "#000000" }
@@ -62,7 +63,7 @@ clickWS f ws = if (length ws == 0)
 
 
 myXPConfig = defaultXPConfig
-  { font = myFont
+  { font = myFont 12
   , bgColor = bg normal
   , fgColor = fg normal
   , fgHLight = fg focused
@@ -72,10 +73,16 @@ myXPConfig = defaultXPConfig
   , historySize = 100
   }
 
+mySMConfig :: SMConfig
 mySMConfig = defaultSMConfig
   { gap = 50
-  , dzenFont  = Just myFont
+  , dzenFont  = Just $ myFont 14
+  , fontWidth = 13
+  , fgDzen = fg cs
+  , bgDzen = bg cs
   }
+  where
+  cs = focused
 
 data ColorScheme = CS
   { fg :: String
