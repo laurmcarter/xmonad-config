@@ -6,6 +6,8 @@ module My.Bars
 
 import XMonad.Util.Run
 
+import My.Utils
+
 import System.IO (Handle)
 import Control.Arrow (second)
 import Control.Monad (when)
@@ -54,30 +56,23 @@ conkyBar f a x0 x1 = concat
   , dzenBar a x0 x1
   ]
 
-dzenBar a x0 x1 = concat
-  [ "dzen2 -x '"
-  , show x0
-  , "' -y '0' -h '16' -w '"
-  , show (x1-x0)
-  , "' -ta '"
-  , a
-  , "' -fg '"
-  , fg normal
-  , "' -bg '"
-  , bg normal
-  , "' -fn '"
-  , myFont 12
-  , "'"
+dzenBar a x0 x1 = cmdArgs "dzen2"
+  [ ( "-x"  , qt $ show x0 )
+  , ( "-y"  , qt $ "0" )
+  , ( "-h"  , qt $ "16" )
+  , ( "-w"  , qt $ show (x1-x0) )
+  , ( "-ta" , qt $ a )
+  , ( "-fg" , qt $ fg normal )
+  , ( "-bg" , qt $ bg normal )
+  , ( "-fn" , myFont 12 )
+  , ( "-e"  , "'button3=ungrabkeys'" )
   ]
 
-stalonetray x0 x1 = concat
-  [ "stalonetray --geometry '"
-  , show w
-  , "x1+"
-  , show x0
-  , "+0' -i '16' -bg '"
-  , bg normal
-  , "' --icon-gravity NE"
+stalonetray x0 x1 = cmdArgs "stalonetray"
+  [ ( "--geometry"     , qt $ concat [ show w , "x1+" , show x0 , "+0" ] )
+  , ( "-i"             , qt $ "16" )
+  , ( "-bg"            , qt $ bg normal )
+  , ( "--icon-gravity" , qt $ "NE" )
   ]
   where w = (x1 - x0) `div` 16
 

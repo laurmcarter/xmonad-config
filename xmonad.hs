@@ -41,6 +41,7 @@ import My.WorkspaceOnScreen
 import My.NamedSubmap
 import My.CycleScreens
 import My.QueryHelpers
+import My.Utils
 
 -- }}}
 
@@ -244,30 +245,12 @@ main = do
 
 -- IO {{{
 
-connectedToExt :: String -> IO Bool
-connectedToExt mon = any (elem '*') <$> under <$> lines <$> pipe [ ("xrandr",[]) ] ""
-  where
-    under ls =
-      let ls' = dropWhile (not . isPrefixOf mon) ls in
-        head ls' : (keepUntil (not . isPrefixOf " ") $ tail ls')
-
-keepUntil :: (a -> Bool) -> [a] -> [a]
-keepUntil p as = case as of
-  [] -> []
-  a:as'
-    | p a ->       []
-    | otherwise -> a : keepUntil p as'
-
 cleanUp :: IO ()
 cleanUp = void $ runProcessWithInput "killall" ["stalonetray","dzen2","conky"] ""
 
 -- }}}
 
 -- Helpers {{{
-
-pipe :: [(String,[String])] -> String -> IO String
-pipe [] res              = return res
-pipe ((c,args):rest) res = runProcessWithInput c args res >>= pipe rest
 
 volUp = vol True
 volDown = vol False
@@ -276,9 +259,6 @@ vol :: Bool -> Int -> X ()
 vol isUp delta = spawn ("amixer set Master " ++ show delta ++ "%" ++ dir isUp)
   where
   dir = branch "+" "-"
-
-branch :: a -> a -> Bool -> a
-branch t f b = if b then t else f
 
 -- }}}
 
