@@ -20,6 +20,7 @@ import XMonad.Prompt.XMonad (xmonadPrompt)
 
 import XMonad.Util.EZConfig (mkKeymap)
 import XMonad.Util.Run (spawnPipe,runProcessWithInput,runInTerm)
+import XMonad.Util.Paste (pasteChar)
 
 import XMonad.Actions.SpawnOn (spawnHere)
 import XMonad.Actions.Submap (submap)
@@ -34,6 +35,7 @@ import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower,isDigit)
 import Data.Maybe (fromJust)
 import System.Exit (exitWith,ExitCode(..))
+import Text.ParserCombinators.ReadP (readP_to_S)
 import qualified Data.Map as M
 
 import My.Bars
@@ -123,6 +125,10 @@ myKeys conf = mkKeymap conf $
     , ( "M-a"           , "Layouts Mode"            , mode "Layouts"      layoutMap )
     , ( "M-S-w"         , "Workspace Mode"          , mode "Workspaces"   workspaceMap )
     , ( "M-v"           , "Volume Mode"             , mode "Volume"       volumeMap )
+    , ( "C-d"           , "Confirm Exit"            , smUrgent "Confirm Exit" exitMap )
+    ]
+  exitMap =
+    [ ( "C-d"           , "Yes, really exit."       , pasteChar controlMask 'd' )
     ]
   volumeMap =
     [ ( plus_key        , "Up"                      , volUp 5 )
@@ -178,6 +184,7 @@ myKeys conf = mkKeymap conf $
   volUpKey = "<XF86AudioRaiseVolume>"
   volDownKey = "<XF86AudioLowerVolume>"
   plus_key = "S-="
+  smUrgent = namedSM (mySMConfig { bgDzen = bg urgent }) conf
 
 -- }}}
 
