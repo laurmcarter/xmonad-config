@@ -8,6 +8,7 @@ import XMonad.Hooks.ManageHelpers (doCenterFloat,doFullFloat)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks)
 import XMonad.Hooks.DynamicLog (dynamicLogWithPP)
 import XMonad.Hooks.UrgencyHook (withUrgencyHookC,urgencyConfig,UrgencyConfig(..),SuppressWhen(..),dzenUrgencyHook,NoUrgencyHook(..))
+import XMonad.Hooks.EwmhDesktops (fullscreenEventHook)
 
 import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Layout.IM (withIM, Property(..))
@@ -239,6 +240,7 @@ main = do
       , manageHook         = myManageHook <+> manageDocks
       , logHook            = dynamicLogWithPP $ myDzenPP (dzenMain++dzenExt)
       , startupHook        = myStartupHook
+      , handleEventHook    = fullscreenEventHook
       }
 
 -- }}}
