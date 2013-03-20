@@ -8,7 +8,7 @@ import XMonad.Hooks.ManageHelpers (doCenterFloat,doFullFloat)
 import XMonad.Hooks.ManageDocks (avoidStruts,manageDocks)
 import XMonad.Hooks.DynamicLog (dynamicLogWithPP)
 import XMonad.Hooks.UrgencyHook (withUrgencyHookC,urgencyConfig,UrgencyConfig(..),SuppressWhen(..),dzenUrgencyHook,NoUrgencyHook(..))
-import XMonad.Hooks.EwmhDesktops (fullscreenEventHook)
+import XMonad.Hooks.EwmhDesktops (fullscreenEventHook,ewmh)
 
 import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Layout.IM (withIM, Property(..))
@@ -29,8 +29,8 @@ import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
 import XMonad.Actions.Warp (warpToWindow)
 import XMonad.Actions.CycleWS (toggleWS')
 
-import Control.Applicative ((<$>))
-import Control.Monad (void)
+import Control.Applicative ((<$>),(<*>))
+import Control.Monad (void,msum)
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower,isDigit)
 import Data.Maybe (fromJust)
@@ -72,7 +72,7 @@ myWorkspaces = M.keys wsMap
 -- Layouts {{{
 
 myLayout     = avoidStruts $ smartBorders $ 
-  --onWorkspace "I" im $
+  onWorkspace "M" Full $
   tiled ||| Mirror tiled ||| Full
   where
   tiled = Tall nmaster delta ratio
@@ -214,7 +214,7 @@ myManageHook = (composeAll . concat $
     ignores       = ["desktop_window","stalonetray"]
     classFloats   = ["MPlayer","Xmessage", "Gcolor2"]
     fullFloats    = ["exe"]
-    matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup","msg"]
+    matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup"]
     notifications = ["notify-dzen"]
     mail          = ["Thunderbird"]
     im            = ["irssi","pidgin"]
@@ -231,10 +231,14 @@ myUrgencyConfig = urgencyConfig { suppressWhen = Focused }
 
 main = do
   cleanUp
-  dzenMain <- statusBarMain True
-  ext      <- connectedToExt myExtMon
-  dzenExt  <- statusBarExternal ext
-  xmonad $ withUrgencyHookC NoUrgencyHook myUrgencyConfig $
+  lapMonX  <- monitorResolution "LVDS1"
+  bigMonX  <- monitorResolution "DP2"
+  smlMonX  <- monitorResolution "VGA1"
+  let mon0X = msum [lapMonX,bigMonX,smlMonX]
+  let mon1X = msum [smlMonX,lapMonX]
+  dzenMain <- statusBarMain mon0X
+  dzenExt  <- statusBarExternal ((,) <$> mon0X <*> mon1X)
+  xmonad $ withUrgencyHookC NoUrgencyHook myUrgencyConfig $ ewmh
     defaultConfig
       { modMask            = myModKey
       , terminal           = myTerminal

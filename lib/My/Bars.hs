@@ -6,16 +6,13 @@ module My.Bars
 
 import XMonad.Util.Run
 
-import My.Utils
-
 import System.IO (Handle)
 import Control.Arrow (second)
+import Control.Applicative
 import Control.Monad (when)
 
+import My.Utils
 import My.Decor
-
-mon0x = 1920
-mon1x = 1280
 
 mySBarsStart w =                                 0
 mySBars      w = [ (dzenBar "l"               ,  myBarsStart w) ]
@@ -28,26 +25,26 @@ myBars       w = [ (conkyBar ".conkytime" "c" , half w + 200)
 
 half = (`div` 2)
 
-sbarsMain = bars (mySBarsStart mon0x) (mySBars mon0x)
-barsMain  = bars (myBarsStart mon0x) (myBars mon0x)
+sbarsMain x = bars (mySBarsStart x) (mySBars x)
+barsMain  x = bars (myBarsStart x) (myBars x)
 
-sbarsExternal = bars (mySBarsStart mon1x + mon0x) (map (second (+ mon0x)) (mySBars mon1x))
-barsExternal  = bars (myBarsStart mon1x + mon0x) (map (second (+ mon0x)) (myBars mon1x))
+sbarsExternal (x0,x1) = bars (mySBarsStart x1 + x0) (map (second (+ x0)) (mySBars x1))
+barsExternal (x0,x1) = bars (myBarsStart x1 + x0) (map (second (+ x0)) (myBars x1))
 
 ---------------------------------------------------------------------
 
-statusBarMain :: Bool -> IO [Handle]
-statusBarMain  = statusBar sbarsMain barsMain
+statusBarMain :: Maybe Int -> IO [Handle]
+statusBarMain x = statusBar ((,) <$> (sbarsMain <$> x) <*> (barsMain <$> x))
 
-statusBarExternal :: Bool -> IO [Handle]
-statusBarExternal  = statusBar sbarsExternal barsExternal
+statusBarExternal :: Maybe (Int,Int) -> IO [Handle]
+statusBarExternal xs = statusBar ((,) <$> (sbarsExternal <$> xs) <*> (barsExternal <$> xs))
 
-statusBar :: [String] -> [String] -> Bool -> IO [Handle]
-statusBar sts cs shouldRun = do
-  when shouldRun $ mapM_ spawnPipe cs
-  if shouldRun
-    then mapM spawnPipe sts
-    else return []
+statusBar :: Maybe ([String],[String]) -> IO [Handle]
+statusBar m = case m of
+  Just (sts,cs) -> do
+    mapM_ spawnPipe cs
+    mapM spawnPipe sts
+  Nothing       -> return []
 
 conkyBar f a x0 x1 = concat
   [ "conky -c "
