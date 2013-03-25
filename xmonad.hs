@@ -46,6 +46,8 @@ import My.CycleScreens
 import My.QueryHelpers
 import My.Utils
 
+import qualified My.WorkspaceHistory as H
+
 -- }}}
 
 -- Applications {{{
@@ -97,7 +99,7 @@ myKeys conf = mkKeymap conf $
   ---- actual bindings ----
   reduceKeys topLevelKeys ++
   [ ("M-" ++ m ++ w, f w)
-  | (f,m) <- [(myView, ""), (myShift, "S-")]
+  | (f,m) <- [(H.view myView, ""), (myShift, "S-")]
   , w     <- allNumberWorkspaces conf 
   ]
   where
@@ -109,12 +111,14 @@ myKeys conf = mkKeymap conf $
     , ( "M-S-<Tab>"     , "Cycle Screens"           , cycleScreensWith myView )
     , ( "M-j"           , "Focus Down"              , windows W.focusUp )
     , ( "M-k"           , "Focus Up"                , windows W.focusDown )
-    ---- session ----
+    , ( "M-S-h"         , "Workspace Back"          , H.back myView )
+    , ( "M-S-l"         , "Workspace Forward"       , H.forward myView )
+    ---- session ---- 
     , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --recompile && xmonad --restart" )
     , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )
     , ( "M-C-<F4>"      , "Shut Down"               , spawn "poweroff" )
     ---- utils ----
-    , ( "M-S-l"         , "Lock"                    , spawn "slock" )
+    , ( "M-C-l"         , "Lock"                    , spawn "slock" )
     , ( "<Print>"       , "Screenshot"              , spawn "scrot" )
     , ( volUpKey        , "Vol Up"                  , volUp 5 )
     , ( volDownKey      , "Vol Down"                , volDown 5 )

@@ -15,17 +15,17 @@ import XMonad
   , X (..)
   )
 
-import qualified Data.Map as Map
+import qualified Data.Map as M
 
-type WSMap = Map.Map WorkspaceId ScreenId 
+type WSMap = M.Map WorkspaceId ScreenId 
 
 onScreen :: ScreenId -> [WorkspaceId] -> WSMap
-onScreen i ws = Map.fromList [ (w,i) | w <- ws ]
+onScreen i ws = M.fromList [ (w,i) | w <- ws ]
 
 workspaceOnScreen ::
   WSMap -> (WorkspaceId -> WindowSet -> WindowSet) -> WorkspaceId -> X ()
 workspaceOnScreen m f w =
-  case Map.lookup w m of
+  case M.lookup w m of
     Nothing -> return ()
     Just s  ->
       do mws <- screenWorkspace s
