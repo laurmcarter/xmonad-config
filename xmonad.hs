@@ -13,6 +13,7 @@ import XMonad.Hooks.EwmhDesktops (fullscreenEventHook,ewmh)
 import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Layout.IM (withIM, Property(..))
 import XMonad.Layout.PerWorkspace (onWorkspace)
+import XMonad.Layout.LayoutHints (layoutHints)
 
 import XMonad.Prompt.Shell (split,shellPrompt)
 import XMonad.Prompt.Workspace (workspacePrompt)
@@ -73,7 +74,7 @@ myWorkspaces = M.keys wsMap
 
 -- Layouts {{{
 
-myLayout     = avoidStruts $ smartBorders $ 
+myLayout     = avoidStruts $ smartBorders $ layoutHints $
   onWorkspace "M" Full $
   tiled ||| Mirror tiled ||| Full
   where
@@ -111,8 +112,10 @@ myKeys conf = mkKeymap conf $
     , ( "M-S-<Tab>"     , "Cycle Screens"           , cycleScreensWith myView )
     , ( "M-j"           , "Focus Down"              , windows W.focusUp )
     , ( "M-k"           , "Focus Up"                , windows W.focusDown )
-    , ( "M-S-h"         , "Workspace Back"          , H.back myView )
-    , ( "M-S-l"         , "Workspace Forward"       , H.forward myView )
+    , ( "M-h"           , "View Back"               , H.back myView )
+    , ( "M-l"           , "View Forward"            , H.forward myView )
+    , ( "M-S-h"         , "Shift Back"              , H.backSave myShift )
+    , ( "M-S-l"         , "Shift Forward"           , H.forwardSave myShift )
     ---- session ---- 
     , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --recompile && xmonad --restart" )
     , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )

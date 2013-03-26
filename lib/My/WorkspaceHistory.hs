@@ -2,7 +2,9 @@
 
 module My.WorkspaceHistory
   ( back
+  , backSave
   , forward
+  , forwardSave
   , view
   ) where
 
@@ -12,90 +14,125 @@ import qualified XMonad.StackSet as W
 
 import Control.Applicative
 import Control.Monad.State
+import Data.Maybe
 import Data.Monoid
 import Data.Data
 import qualified Data.Map as M
+
+-- Types {{{
 
 data WSHistory = WSH
   { wsHistory :: [WorkspaceId]
   , wsFuture  :: [WorkspaceId]
   } deriving (Eq,Show,Typeable,Data)
 
+type Getter = WSHistory -> [WorkspaceId]
+type Setter = [WorkspaceId] -> WSHistory -> WSHistory
+type PeekOrPop = X (Maybe WorkspaceId)
+
+setHistory :: Setter
+setHistory h (WSH _ f) = WSH h f
+
+setFuture :: Setter
+setFuture f (WSH h _) = WSH h f
+
 instance ExtensionClass WSHistory where
   initialValue = WSH [] []
 
-pushWSHist :: WorkspaceId -> X ()
-pushWSHist w = do
-  (WSH h f) <- XS.get
-  let h' = if length h >= 500 then take 99 h else h
-  XS.put $ WSH (w:h') f
+-- }}}
 
-pushWSFut :: WorkspaceId -> X ()
-pushWSFut w = do
-  (WSH h f) <- XS.get
-  let f' = if length f >= 500 then take 99 f else f
-  XS.put $ WSH h (w:f')
+-- Stack Ops {{{
 
-popWSHist :: X (Maybe WorkspaceId)
-popWSHist = do
-  (WSH h f) <- XS.get
-  case h of
+push :: Getter -> Setter -> WorkspaceId -> X ()
+push g s w = do
+  wsh <- XS.get
+  let ws  = g wsh
+      ws' = if (length ws) >= 500 then take 99 ws else ws
+  XS.put $ s (w:ws') wsh
+
+pushHist :: WorkspaceId -> X ()
+pushHist = push wsHistory setHistory
+
+pushFut :: WorkspaceId -> X ()
+pushFut = push wsFuture setFuture
+
+pop :: Getter -> Setter -> X (Maybe WorkspaceId)
+pop g s = do
+  wsh <- XS.get
+  case g wsh of
     []   -> return Nothing
-    w:h' -> do
-      XS.put $ WSH h' f
-      return (Just w)
+    w:ws -> do
+      XS.put $ s ws wsh
+      return $ Just w
 
-popWSFut :: X (Maybe WorkspaceId)
-popWSFut = do
-  (WSH h f) <- XS.get
-  case f of
-    []   -> return Nothing
-    w:f' -> do
-      XS.put $ WSH h f'
-      return (Just w)
+popHist :: X (Maybe WorkspaceId)
+popHist = pop wsHistory $ \h (WSH _ f) -> WSH h f
 
-clearWSFut :: X ()
-clearWSFut = do
-  (WSH h _) <- XS.get
-  XS.put $ WSH h []
+popFut :: X (Maybe WorkspaceId)
+popFut = pop wsHistory $ \f (WSH h _) -> WSH h f
+
+peek :: Getter -> X (Maybe WorkspaceId)
+peek f = listToMaybe . f <$> XS.get
+
+peekHist :: X (Maybe WorkspaceId)
+peekHist = peek wsHistory
+
+peekFut :: X (Maybe WorkspaceId)
+peekFut = peek wsFuture
+
+clear :: Setter -> X ()
+clear f = XS.put . f [] =<< XS.get
+
+clearFut :: X ()
+clearFut = clear setFuture
+
+clearHist :: X ()
+clearHist = clear setHistory
+
+-- }}}
 
 back :: (WorkspaceId -> X ()) -> X ()
-back f = do
-  mw <- popWSHist
+back = back' True
+
+backSave :: (WorkspaceId -> X ()) -> X ()
+backSave = back' False
+
+back' :: Bool -> (WorkspaceId -> X ()) -> X ()
+back' shouldPop f = do
+  mw <- if shouldPop then popHist else peekHist
   case mw of
-    Nothing -> do
-      -- spawn ("echo \"tried back, but history was empty\" | xmessage -file -")
-      return ()
+    Nothing -> return ()
     Just w  -> do
       cur <- W.currentTag . windowset <$> get
-      pushWSFut cur
+      when shouldPop $ pushFut cur
       s@(WSH _ _) <- XS.get
-      -- spawn ("echo \"back " ++ show w ++ ", " ++ show s ++ "\" | xmessage -file -")
       f w
 
 forward :: (WorkspaceId -> X ()) -> X ()
-forward f = do
-  mw <- popWSFut
+forward = forward' True
+
+forwardSave :: (WorkspaceId -> X ()) -> X ()
+forwardSave = forward' False
+
+forward' :: Bool -> (WorkspaceId -> X ()) -> X ()
+forward' shouldPop f = do
+  mw <- if shouldPop then popFut else peekFut
   case mw of
-    Nothing -> do
-      -- spawn ("echo \"tried forward, but future was empty\" | xmessage -file -")
-      return ()
+    Nothing -> return ()
     Just w  -> do
       cur <- W.currentTag . windowset <$> get
-      pushWSHist cur
+      when shouldPop $ pushHist cur
       s@(WSH _ _) <- XS.get
-      -- spawn ("echo \"forward " ++ show w ++ ", " ++ show s ++ "\" | xmessage -file -")
       f w
 
 view :: (WorkspaceId -> X ()) -> WorkspaceId -> X ()
 view f w = do
-  clearWSFut
+  clearFut
   cur <- W.currentTag . windowset <$> get
   if cur == w
   then return ()
   else do
     s@(WSH _ _) <- XS.get
-    pushWSHist cur
-    -- spawn ("echo \"view " ++ show cur ++ ", " ++ show s ++ "\" | xmessage -file -")
+    pushHist cur
     f w
 
