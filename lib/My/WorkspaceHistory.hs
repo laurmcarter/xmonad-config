@@ -6,6 +6,7 @@ module My.WorkspaceHistory
   , forward
   , forwardSave
   , view
+  , displayStack
   ) where
 
 import XMonad
@@ -66,10 +67,10 @@ pop g s = do
       return $ Just w
 
 popHist :: X (Maybe WorkspaceId)
-popHist = pop wsHistory $ \h (WSH _ f) -> WSH h f
+popHist = pop wsHistory setHistory
 
 popFut :: X (Maybe WorkspaceId)
-popFut = pop wsHistory $ \f (WSH h _) -> WSH h f
+popFut = pop wsFuture setFuture
 
 peek :: Getter -> X (Maybe WorkspaceId)
 peek f = listToMaybe . f <$> XS.get
@@ -83,13 +84,18 @@ peekFut = peek wsFuture
 clear :: Setter -> X ()
 clear f = XS.put . f [] =<< XS.get
 
-clearFut :: X ()
-clearFut = clear setFuture
-
 clearHist :: X ()
 clearHist = clear setHistory
 
+clearFut :: X ()
+clearFut = clear setFuture
+
 -- }}}
+
+displayStack :: X ()
+displayStack = do
+  s@(WSH _ _) <- XS.get
+  spawn ("echo \"Workspace History: " ++ show s ++ "\" | xmessage -file -")
 
 back :: (WorkspaceId -> X ()) -> X ()
 back = back' True
@@ -101,7 +107,8 @@ back' :: Bool -> (WorkspaceId -> X ()) -> X ()
 back' shouldPop f = do
   mw <- if shouldPop then popHist else peekHist
   case mw of
-    Nothing -> return ()
+    Nothing -> do
+      return ()
     Just w  -> do
       cur <- W.currentTag . windowset <$> get
       when shouldPop $ pushFut cur
@@ -118,7 +125,8 @@ forward' :: Bool -> (WorkspaceId -> X ()) -> X ()
 forward' shouldPop f = do
   mw <- if shouldPop then popFut else peekFut
   case mw of
-    Nothing -> return ()
+    Nothing -> do
+      return ()
     Just w  -> do
       cur <- W.currentTag . windowset <$> get
       when shouldPop $ pushHist cur
