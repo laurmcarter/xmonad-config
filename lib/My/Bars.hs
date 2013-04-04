@@ -34,10 +34,12 @@ barsExternal (x0,x1) = bars (myBarsStart x1 + x0) (map (second (+ x0)) (myBars x
 ---------------------------------------------------------------------
 
 statusBarMain :: Maybe Int -> IO [Handle]
-statusBarMain x = statusBar ((,) <$> (sbarsMain <$> x) <*> (barsMain <$> x))
+statusBarMain x = statusBar $ (,) <$> (sbarsMain <$> x) <*> (barsMain <$> x)
 
-statusBarExternal :: Maybe (Int,Int) -> IO [Handle]
-statusBarExternal xs = statusBar ((,) <$> (sbarsExternal <$> xs) <*> (barsExternal <$> xs))
+statusBarExternal :: Maybe Int -> Maybe Int -> IO [Handle]
+statusBarExternal x0 x1 = statusBar $ (,) <$> (sbarsExternal <$> xs) <*> (barsExternal <$> xs)
+  where
+  xs = (,) <$> x0 <*> x1
 
 statusBar :: Maybe ([String],[String]) -> IO [Handle]
 statusBar m = case m of

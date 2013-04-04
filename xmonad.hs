@@ -31,7 +31,7 @@ import XMonad.Actions.Warp (warpToWindow)
 import XMonad.Actions.CycleWS (toggleWS')
 
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (void,msum)
+import Control.Monad (void,msum,replicateM_)
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower,isDigit)
 import Data.Maybe (fromJust)
@@ -116,6 +116,7 @@ myKeys conf = mkKeymap conf $
     , ( "M-l"           , "View Forward"            , H.forward myView )
     , ( "M-S-h"         , "Shift Back"              , H.backSave myShift )
     , ( "M-S-l"         , "Shift Forward"           , H.forwardSave myShift )
+    , ( "M-S-s"         , "Display WS History"      , H.displayStack )
     ---- session ---- 
     , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --recompile && xmonad --restart" )
     , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )
@@ -131,15 +132,12 @@ myKeys conf = mkKeymap conf $
     , ( "M-w"           , "Windows Mode"            , mode "Windows"      windowMap )
     , ( "M-a"           , "Layouts Mode"            , mode "Layouts"      layoutMap )
     , ( "M-S-w"         , "Workspace Mode"          , mode "Workspaces"   workspaceMap )
-    , ( "M-v"           , "Volume Mode"             , mode "Volume"       volumeMap )
+    , ( "M-v"           , "Volume Mode"             , upDown "Volume" (volUp 5) (volDown 5) )
+    , ( "M-b"           , "Brightness Mode"         , upDown "Brightness" (brightnessUp 1) (brightnessDown 1) )
     , ( "C-d"           , "Confirm Exit"            , smUrgent "Confirm Exit" exitMap )
     ]
   exitMap =
     [ ( "C-d"           , "Yes, really exit."       , pasteChar controlMask 'd' )
-    ]
-  volumeMap =
-    [ ( plus_key        , "Up"                      , volUp 5 )
-    , ( "-"             , "Down"                    , volDown 5)
     ]
   workspaceMap =
     [ ( w               , "View " ++ w              , myView w ) | w <- allNumberWorkspaces conf ] ++
@@ -184,12 +182,15 @@ myKeys conf = mkKeymap conf $
     , ( "M-a"           , "Next Layout"             , sendMessage NextLayout )
     , ( "r"             , "First Layout"            , sendMessage FirstLayout )
     ]
+  volUpKey = "<XF86AudioRaiseVolume>"
+  volDownKey = "<XF86AudioLowerVolume>"
+  brightUpKey = "<XF86MonBrightnessUp>"
+  brightDownKey = "<XF86MonBrightnessDown>"
   mode = modeSM mySMConfig conf Nothing
+  upDown title upC downC = upDownModeSM mySMConfig conf Nothing title (plus_key,upC) ("-",downC)
   sm = namedSM mySMConfig conf
   myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
   myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
-  volUpKey = "<XF86AudioRaiseVolume>"
-  volDownKey = "<XF86AudioLowerVolume>"
   plus_key = "S-="
   smUrgent = namedSM (mySMConfig { bgDzen = bg urgent }) conf
 
@@ -244,7 +245,7 @@ main = do
   let mon0X = msum [lapMonX,bigMonX,smlMonX]
   let mon1X = msum [smlMonX,lapMonX]
   dzenMain <- statusBarMain mon0X
-  dzenExt  <- statusBarExternal ((,) <$> mon0X <*> mon1X)
+  dzenExt  <- statusBarExternal mon0X mon1X
   xmonad $ withUrgencyHookC NoUrgencyHook myUrgencyConfig $ ewmh
     defaultConfig
       { modMask            = myModKey
@@ -279,6 +280,16 @@ vol :: Bool -> Int -> X ()
 vol isUp delta = spawn ("amixer set Master " ++ show delta ++ "%" ++ dir isUp)
   where
   dir = branch "+" "-"
+
+brightness :: Bool -> Int -> X ()
+brightness isUp delta = replicateM_ delta $
+  spawn ("echo " ++ foo isUp ++ " > /home/kcarter/.brightness ; echo " ++ dir isUp ++ " > /proc/acpi/ibm/cmos")
+  where
+  foo = branch "up" "down"
+  dir = branch "4" "5"
+
+brightnessUp = brightness True
+brightnessDown = brightness False
 
 -- }}}
 

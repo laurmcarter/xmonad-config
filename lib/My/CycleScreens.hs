@@ -9,13 +9,15 @@ module My.CycleScreens
 import XMonad
 import XMonad.StackSet
 
+import Control.Monad (void)
+
 -- | Cycle through Xinerama screens using a provided viewing function.
 cycleScreensWith :: (WorkspaceId -> X ()) -> X ()
-cycleScreensWith f = reportCycleScreensWith f >> return ()
+cycleScreensWith f = void $ reportCycleScreensWith f
 
 -- | Cycle through Xinerama screens with standard view function.
 cycleScreens :: X ()
-cycleScreens = reportCycleScreens >> return ()
+cycleScreens = void reportCycleScreens
 
 -- | Cycle through Xinerama screens with standard view function, returning
 --   True when cycling back to screen 0.
@@ -33,7 +35,6 @@ reportCycleScreensWith f = do
     Just _  -> return True
     Nothing -> return False
 
--- | Standard view function.
 viewWS :: WorkspaceId -> X ()
 viewWS = windows . view
 

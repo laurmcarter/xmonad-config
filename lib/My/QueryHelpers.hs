@@ -12,6 +12,8 @@ import XMonad (Query(..),X(..))
 import XMonad.ManageHook (stringProperty,(=?),idHook)
 import XMonad.Actions.WindowGo (ifWindow)
 
+import Control.Applicative ((<$>))
+
 import Data.Char (toLower)
 import Data.List (isInfixOf)
 
@@ -19,13 +21,13 @@ role = stringProperty "WM_WINDOW_ROLE"
 name = stringProperty "WM_NAME"
 
 (=/?)   :: Query String -> String -> Query Bool
-q =/? x  = fmap not $ q =? x
+q =/? x  = not <$> q =? x
 
 (=~?)   :: Query String -> String -> Query Bool
-q =~? x  = fmap (isInfixOf $ decap x) $ fmap decap q
+q =~? x  = isInfixOf (decap x) <$> decap <$> q
 
 (=~/?)   :: Query String -> String -> Query Bool
-q =~/? x  = fmap not $ q =~? x 
+q =~/? x  = not <$> q =~? x 
 
 decap   :: String -> String
 decap    = map toLower

@@ -4,6 +4,7 @@ module My.NamedSubmap
   , defaultSMConfig
   , namedSM
   , modeSM
+  , upDownModeSM
   , reduceKeys
   ) where
 
@@ -51,6 +52,10 @@ modeSM smc xc mexit title km =
     maybe id (\k -> ((k,"Exit Mode",return ()) :)) mexit $ km'
   where
   km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
+
+upDownModeSM :: SMConfig -> XConfig a -> Maybe String -> String -> (String,X ()) -> (String,X ()) -> X ()
+upDownModeSM smc xc mexit title (upK,upC) (downK,downC) = modeSM smc xc mexit title $
+  [ (upK,"Up",upC), (downK,"Down",downC) ]
 
 -- | Self-advertising submap that pops up a temporary, roll-open dzen window describing the
 --   available keybindings.

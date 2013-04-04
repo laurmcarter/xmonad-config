@@ -20,7 +20,7 @@ import qualified Data.Map as M
 type WSMap = M.Map WorkspaceId ScreenId 
 
 onScreen :: ScreenId -> [WorkspaceId] -> WSMap
-onScreen i ws = M.fromList [ (w,i) | w <- ws ]
+onScreen s ws = M.fromList [ (w,s) | w <- ws ]
 
 workspaceOnScreen ::
   WSMap -> (WorkspaceId -> WindowSet -> WindowSet) -> WorkspaceId -> X ()
