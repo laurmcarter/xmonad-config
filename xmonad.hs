@@ -16,6 +16,7 @@ import XMonad.Layout.PerWorkspace (onWorkspace)
 import XMonad.Layout.LayoutHints (layoutHints)
 
 import XMonad.Prompt.Shell (split,shellPrompt)
+import XMonad.Prompt.Window (windowPromptGoto)
 import XMonad.Prompt.Workspace (workspacePrompt)
 import XMonad.Prompt.XMonad (xmonadPrompt)
 
@@ -34,7 +35,7 @@ import Control.Applicative ((<$>),(<*>))
 import Control.Monad (void,msum,replicateM_)
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower,isDigit)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust,catMaybes)
 import System.Exit (exitWith,ExitCode(..))
 import Text.ParserCombinators.ReadP (readP_to_S)
 import qualified Data.Map as M
@@ -149,7 +150,6 @@ myKeys conf = mkKeymap conf $
   applicationMap =
     [ ( "<Return>"      , "Terminal"                , spawn myTerminal )
     , ( "b"             , "Browser"                 , spawn myBrowser )
-    , ( "p"             , "DMenu"                   , spawn "dmenu_run -p '>>>'" )
     , ( "c"             , "Qalculate"               , spawn "qalculate-gtk" )
     , ( "l"             , "GColor"                  , spawn "gcolor2" )
     , ( "v"             , "Evince"                  , spawn "evince" )
@@ -169,6 +169,7 @@ myKeys conf = mkKeymap conf $
   promptMap =
     [ ( "p"             , "WS Prompt (view)"        , workspacePrompt myXPConfig (windows . W.view) )
     , ( "S-p"           , "WS Prompt (shift)"       , workspacePrompt myXPConfig (windows . W.shift) )
+    , ( "w"             , "Window Prompt"           , windowPromptGoto myXPConfig )
     , ( "s"             , "Shell Prompt"            , shellPrompt myXPConfig )
     , ( "x"             , "XMonad Prompt"           , xmonadPrompt myXPConfig )
     , ( "e"             , "View Empty WS"           , viewEmptyWorkspace )
@@ -283,9 +284,8 @@ vol isUp delta = spawn ("amixer set Master " ++ show delta ++ "%" ++ dir isUp)
 
 brightness :: Bool -> Int -> X ()
 brightness isUp delta = replicateM_ delta $
-  spawn ("echo " ++ foo isUp ++ " > /home/kcarter/.brightness ; echo " ++ dir isUp ++ " > /proc/acpi/ibm/cmos")
+  spawn ("echo " ++ dir isUp ++ " > /proc/acpi/ibm/cmos")
   where
-  foo = branch "up" "down"
   dir = branch "4" "5"
 
 brightnessUp = brightness True
