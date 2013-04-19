@@ -240,13 +240,17 @@ myUrgencyConfig = urgencyConfig { suppressWhen = Focused }
 
 main = do
   cleanUp
-  lapMonX  <- monitorResolution "LVDS1"
   bigMonX  <- monitorResolution "DP2"
   smlMonX  <- monitorResolution "VGA1"
-  let mon0X = msum [lapMonX,bigMonX,smlMonX]
-  let mon1X = msum [smlMonX,lapMonX]
-  dzenMain <- statusBarMain mon0X
-  dzenExt  <- statusBarExternal mon0X mon1X
+  lapMonX  <- monitorResolution "LVDS1"
+  let xs = chooseXs [bigMonX,smlMonX,lapMonX]
+  (dzenMain,dzenExt) <- maybe
+    (return ([],[]))
+    (\(mon0X,mon1X) -> do
+      dzenMain <- statusBarMain mon0X
+      dzenExt  <- statusBarExternal mon0X mon1X
+      return (dzenMain,dzenExt))
+    xs
   xmonad $ withUrgencyHookC NoUrgencyHook myUrgencyConfig $ ewmh
     defaultConfig
       { modMask            = myModKey
@@ -262,6 +266,19 @@ main = do
       , startupHook        = myStartupHook
       , handleEventHook    = fullscreenEventHook
       }
+
+chooseXs :: [Maybe a] -> Maybe (Maybe a, Maybe a)
+chooseXs ms = case strip ms of
+  Nothing      -> Nothing
+  Just (m,ms') -> case strip ms' of
+    Nothing -> Just (m,Nothing)
+    Just (m',_) -> Just (m,m')
+  where
+  strip :: [Maybe a] -> Maybe (Maybe a,[Maybe a])
+  strip ms = case ms of
+    [] -> Nothing
+    Nothing:ms' -> strip ms'
+    (m@(Just _)):ms' -> Just (m,ms')
 
 -- }}}
 

@@ -54,7 +54,7 @@ modeSM smc xc mexit title km =
   km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
 
 upDownModeSM :: SMConfig -> XConfig a -> Maybe String -> String -> (String,X ()) -> (String,X ()) -> X ()
-upDownModeSM smc xc mexit title (upK,upC) (downK,downC) = modeSM smc xc mexit title $
+upDownModeSM smc xc mexit title (upK,upC) (downK,downC) = modeSM smc xc mexit ("- " ++ title ++ " +") $
   [ (upK,"Up",upC), (downK,"Down",downC) ]
 
 -- | Self-advertising submap that pops up a temporary, roll-open dzen window describing the
