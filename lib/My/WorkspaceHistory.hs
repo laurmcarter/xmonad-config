@@ -48,7 +48,7 @@ push :: Getter -> Setter -> WorkspaceId -> X ()
 push g s w = do
   wsh <- XS.get
   let ws  = g wsh
-      ws' = if (length ws) >= 500 then take 99 ws else ws
+      ws' = if length ws >= 500 then take 99 ws else ws
   XS.put $ s (w:ws') wsh
 
 pushHist :: WorkspaceId -> X ()
@@ -97,50 +97,39 @@ displayStack = do
   s@(WSH _ _) <- XS.get
   spawn ("echo \"Workspace History: " ++ show s ++ "\" | xmessage -file -")
 
+move :: Bool -> Bool -> (WorkspaceId -> X ()) -> X ()
+move forward shouldPop viewF = do
+  mw <- popOrPeek
+  whenJust mw $ \w -> do
+    cur <- W.currentTag . windowset <$> get
+    when shouldPop $ pushF cur
+    s@(WSH _ _) <- XS.get
+    viewF w
+  where
+  popOrPeek :: X (Maybe WorkspaceId)
+  popOrPeek = if shouldPop then popF else peekF
+  popF = if forward then popFut else popHist
+  peekF = if forward then peekFut else peekHist
+  pushF = if forward then pushHist else pushFut
+
 back :: (WorkspaceId -> X ()) -> X ()
-back = back' True
+back = move False True
 
 backSave :: (WorkspaceId -> X ()) -> X ()
-backSave = back' False
-
-back' :: Bool -> (WorkspaceId -> X ()) -> X ()
-back' shouldPop f = do
-  mw <- if shouldPop then popHist else peekHist
-  case mw of
-    Nothing -> do
-      return ()
-    Just w  -> do
-      cur <- W.currentTag . windowset <$> get
-      when shouldPop $ pushFut cur
-      s@(WSH _ _) <- XS.get
-      f w
+backSave = move False False
 
 forward :: (WorkspaceId -> X ()) -> X ()
-forward = forward' True
+forward = move True True
 
 forwardSave :: (WorkspaceId -> X ()) -> X ()
-forwardSave = forward' False
-
-forward' :: Bool -> (WorkspaceId -> X ()) -> X ()
-forward' shouldPop f = do
-  mw <- if shouldPop then popFut else peekFut
-  case mw of
-    Nothing -> do
-      return ()
-    Just w  -> do
-      cur <- W.currentTag . windowset <$> get
-      when shouldPop $ pushHist cur
-      s@(WSH _ _) <- XS.get
-      f w
+forwardSave = move True False
 
 view :: (WorkspaceId -> X ()) -> WorkspaceId -> X ()
-view f w = do
+view viewF w = do
   clearFut
   cur <- W.currentTag . windowset <$> get
-  if cur == w
-  then return ()
-  else do
+  unless (cur == w) $ do
     s@(WSH _ _) <- XS.get
     pushHist cur
-    f w
+    viewF w
 

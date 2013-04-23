@@ -49,12 +49,13 @@ defaultSMConfig = SMConfig
 modeSM :: SMConfig -> XConfig a -> Maybe String -> String -> [(String,String,X ())] -> X ()
 modeSM smc xc mexit title km = 
   namedSM smc xc title $
-    maybe id (\k -> ((k,"Exit Mode",return ()) :)) mexit $ km'
+    maybe id (\k -> ((k,"Exit Mode",return ()) :)) mexit km'
   where
   km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
 
 upDownModeSM :: SMConfig -> XConfig a -> Maybe String -> String -> (String,X ()) -> (String,X ()) -> X ()
-upDownModeSM smc xc mexit title (upK,upC) (downK,downC) = modeSM smc xc mexit ("- " ++ title ++ " +") $
+upDownModeSM smc xc mexit title (upK,upC) (downK,downC) = modeSM smc xc mexit
+  ("- " ++ title ++ " +")
   [ (upK,"Up",upC), (downK,"Down",downC) ]
 
 -- | Self-advertising submap that pops up a temporary, roll-open dzen window describing the
@@ -75,7 +76,7 @@ namedSM smc xc title km = do
         , ( "-fn" , fromMaybe "" $ dzenFont smc )
         ]
     hPutStrLn i ("^pa(10)"++title)
-    mapM (hPutStrLn i . alignDzen smc maxKeyLen) km
+    mapM_ (hPutStrLn i . alignDzen smc maxKeyLen) km
     hFlush i
     return pid
   submap $ mkKeymap xc $ reduceKeys km
@@ -87,7 +88,14 @@ namedSM smc xc title km = do
     maxKeyLen = maximum $ map (\(k,_,_)->length k) km
 
 alignDzen :: SMConfig -> Int -> (String, String, X ()) -> String
-alignDzen smc len (k,t,_) = "^pa(10)" ++ k ++ "^pa("++show ((round (fontWidth smc * fromIntegral len)) + gap smc)++")"++t
+alignDzen smc len (k,t,_) = concat
+  [ "^pa(10)" 
+  , k
+  , "^pa("
+  , show (round (fontWidth smc * fromIntegral len) + gap smc)
+  , ")"
+  , t
+  ]
 
 -- | Takes a named keymap list and reduces it to a normal associative list.
 reduceKeys :: [(a,b,c)] -> [(a,c)]

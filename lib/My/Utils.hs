@@ -18,7 +18,7 @@ monitorResolution mon =
   where
   underMonitor s =
     let ls' = dropWhile (not . isPrefixOf mon) (lines s) in
-      head ls' : (keepUntil (not . isPrefixOf " ") $ tail ls')
+      head ls' : keepUntil (not . isPrefixOf " ") (tail ls')
 
 keepUntil :: (a -> Bool) -> [a] -> [a]
 keepUntil p as = case as of
@@ -28,7 +28,7 @@ keepUntil p as = case as of
     else a : keepUntil p as'
 
 cmdArgs :: String -> [(String,String)] -> String
-cmdArgs cmd args = intercalate " " $ cmd :
+cmdArgs cmd args = unwords cmd :
   concatMap (\(flag,arg) -> if null arg then [flag] else [flag,arg]) args
 
 qt :: String -> String

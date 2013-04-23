@@ -57,10 +57,10 @@ conkyBar f a x0 x1 = concat
 
 dzenBar a x0 x1 = cmdArgs "dzen2"
   [ ( "-x"  , qt $ show x0 )
-  , ( "-y"  , qt $ "0" )
-  , ( "-h"  , qt $ "16" )
+  , ( "-y"  , qt   "0" )
+  , ( "-h"  , qt   "16" )
   , ( "-w"  , qt $ show (x1-x0) )
-  , ( "-ta" , qt $ a )
+  , ( "-ta" , qt   a )
   , ( "-fg" , qt $ fg normal )
   , ( "-bg" , qt $ bg normal )
   , ( "-fn" , myFont 12 )
@@ -69,13 +69,13 @@ dzenBar a x0 x1 = cmdArgs "dzen2"
 
 stalonetray x0 x1 = cmdArgs "stalonetray"
   [ ( "--geometry"     , qt $ concat [ show w , "x1+" , show x0 , "+0" ] )
-  , ( "-i"             , qt $ "16" )
+  , ( "-i"             , qt   "16" )
   , ( "-bg"            , qt $ bg normal )
-  , ( "--icon-gravity" , qt $ "NE" )
+  , ( "--icon-gravity" , qt   "NE" )
   ]
   where w = (x1 - x0) `div` 16
 
-bars :: Int -> [((Int -> Int -> String),Int)] -> [String]
+bars :: Int -> [(Int -> Int -> String,Int)] -> [String]
 bars x bs = case bs of
   []            -> []
   ((f,x'):rest) -> f x x' : bars x' rest

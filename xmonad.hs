@@ -24,19 +24,19 @@ import XMonad.Util.EZConfig (mkKeymap)
 import XMonad.Util.Run (spawnPipe,runProcessWithInput,runInTerm)
 import XMonad.Util.Paste (pasteChar)
 
-import XMonad.Actions.SpawnOn (spawnHere)
 import XMonad.Actions.Submap (submap)
 import XMonad.Actions.FindEmptyWorkspace (viewEmptyWorkspace,tagToEmptyWorkspace)
 import XMonad.Actions.WindowGo (runOrRaise,raiseMaybe)
 import XMonad.Actions.Warp (warpToWindow)
 import XMonad.Actions.CycleWS (toggleWS')
+import XMonad.Actions.SpawnOn (spawnHere,shellPromptHere)
 
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (void,msum,replicateM_)
 import Data.List (isPrefixOf,isInfixOf,intercalate)
 import Data.Char (toLower,isDigit)
 import Data.Maybe (fromJust,catMaybes)
-import System.Exit (exitWith,ExitCode(..))
+import System.Exit (exitSuccess)
 import Text.ParserCombinators.ReadP (readP_to_S)
 import qualified Data.Map as M
 
@@ -65,9 +65,10 @@ nmApplet     = spawn "nm-applet"
 
 -- Workspaces {{{
 
-wsMap = M.union
-  (onScreen 1 ["1","2","3","4","5"])
-  (onScreen 0 ["6","7","8","9","M","I"])
+wsMap = M.unions
+  [ onScreen 1 ["1","2","3","4","5"]
+  , onScreen 0 ["6","7","8","9","M","I"]
+  ]
 
 myWorkspaces = M.keys wsMap
 
@@ -92,8 +93,8 @@ myLayout     = avoidStruts $ smartBorders $ layoutHints $
 myModKey     = mod4Mask
 
 allWorkspaces conf p = filter p $ XMonad.workspaces conf
-allNumberWorkspaces conf = allWorkspaces conf (\w -> (length w == 1 && isDigit (head w)))
-allNamedWorkspaces conf = allWorkspaces conf (\w -> not (length w == 1 && isDigit (head w)))
+allNumberWorkspaces conf = allWorkspaces conf $ \w -> length w == 1 && isDigit (head w)
+allNamedWorkspaces conf = allWorkspaces conf $ \w -> not (length w == 1 && isDigit (head w))
 
 myKeys conf = mkKeymap conf $
   ---- show keys ----
@@ -120,7 +121,7 @@ myKeys conf = mkKeymap conf $
     , ( "M-S-s"         , "Display WS History"      , H.displayStack )
     ---- session ---- 
     , ( "M-q"           , "Restart XMonad"          , spawn "xmonad --recompile && xmonad --restart" )
-    , ( "M-C-q"         , "Logout"                  , io $ exitWith ExitSuccess )
+    , ( "M-C-q"         , "Logout"                  , io exitSuccess )
     , ( "M-C-<F4>"      , "Shut Down"               , spawn "poweroff" )
     ---- utils ----
     , ( "M-C-l"         , "Lock"                    , spawn "slock" )
@@ -148,11 +149,11 @@ myKeys conf = mkKeymap conf $
     , ( "S-<Tab>"       , "Cycle Screens"           , cycleScreensWith myView )
     ]
   applicationMap =
-    [ ( "<Return>"      , "Terminal"                , spawn myTerminal )
-    , ( "b"             , "Browser"                 , spawn myBrowser )
-    , ( "c"             , "Qalculate"               , spawn "qalculate-gtk" )
-    , ( "l"             , "GColor"                  , spawn "gcolor2" )
-    , ( "v"             , "Evince"                  , spawn "evince" )
+    [ ( "<Return>"      , "Terminal"                , spawnHere myTerminal )
+    , ( "b"             , "Browser"                 , spawnHere myBrowser )
+    , ( "c"             , "Qalculate"               , spawnHere "qalculate-gtk" )
+    , ( "l"             , "GColor"                  , spawnHere "gcolor2" )
+    , ( "v"             , "Evince"                  , spawnHere "evince" )
     , ( "o"             , "Xprop"                   , spawn "xprop > /home/kcarter/.xprop" )
     , ( "x"             , "Kill Window"             , kill )
     , ( "M-x"           , "Kill Window"             , kill )
@@ -170,7 +171,7 @@ myKeys conf = mkKeymap conf $
     [ ( "p"             , "WS Prompt (view)"        , workspacePrompt myXPConfig (windows . W.view) )
     , ( "S-p"           , "WS Prompt (shift)"       , workspacePrompt myXPConfig (windows . W.shift) )
     , ( "w"             , "Window Prompt"           , windowPromptGoto myXPConfig )
-    , ( "s"             , "Shell Prompt"            , shellPrompt myXPConfig )
+    , ( "s"             , "Shell Prompt"            , shellPromptHere myXPConfig )
     , ( "x"             , "XMonad Prompt"           , xmonadPrompt myXPConfig )
     , ( "e"             , "View Empty WS"           , viewEmptyWorkspace )
     , ( "S-e"           , "Shift to Empty WS"       , tagToEmptyWorkspace )
@@ -191,7 +192,7 @@ myKeys conf = mkKeymap conf $
   upDown title upC downC = upDownModeSM mySMConfig conf Nothing title (plus_key,upC) ("-",downC)
   sm = namedSM mySMConfig conf
   myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
-  myShift w = (windows $ W.shift w) >> warpToWindow 0.5 0.5
+  myShift w = windows (W.shift w) >> warpToWindow 0.5 0.5
   plus_key = "S-="
   smUrgent = namedSM (mySMConfig { bgDzen = bg urgent }) conf
 

@@ -50,12 +50,12 @@ myDzenPP hs = PP
   , ppExtras          = []
   }
 
-clickWS f ws = if (length ws == 0)
+clickWS f ws = if null ws
   then s
   else buildCmd s
   where
   buildCmd s = "^ca(1," ++ cmd ++ ")" ++ s ++ "^ca()"
-  cmd = if (isDigit c)
+  cmd = if isDigit c
     then "xdotool key 'super+" ++ ws ++ "'"
     else "xdotool key 'super+shift+" ++ [toLower c] ++ "'"
   c = head ws 
