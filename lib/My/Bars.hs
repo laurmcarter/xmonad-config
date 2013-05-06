@@ -15,13 +15,17 @@ import My.Utils
 import My.Decor
 
 mySBarsStart w =                                 0
-mySBars      w = [ (dzenBar "l"               ,  myBarsStart w) ]
+mySBars      w = [ (dzen                      ,  myBarsStart w) ]
 
 myBarsStart  w =                                half w - 200
-myBars       w = [ (conkyBar ".conkytime" "c" , half w + 200)
-                 , (conkyBar ".conkytop"  "r" , w - 80)
+myBars       w = [ (conkyCenter  ".conkytime" , half w + 200)
+                 , (conkyRight   ".conkytop"  , w - 80)
                  , (stalonetray               , w)
                  ]
+
+dzen = dzenBar myBarConfig 0
+conkyCenter = conkyBar $ myBarConfig { titleAlign = CenterAlign }
+conkyRight = conkyBar $ myBarConfig { titleAlign = RightAlign }
 
 half = (`div` 2)
 
@@ -48,13 +52,12 @@ statusBar m = case m of
     mapM spawnPipe sts
   Nothing       -> return []
 
-conkyBar f a x0 x1 = concat
-  [ "conky -c "
-  , f
-  , " | "
-  , dzenBar a x0 x1
+conkyBar dzc f x0 x1 = cmdArgs "conky"
+  [ ( "-c" , f )
+  , ( "|"  , dzenBar dzc 0 x0 x1 )
   ]
 
+{-
 dzenBar a x0 x1 = cmdArgs "dzen2"
   [ ( "-x"  , qt $ show x0 )
   , ( "-y"  , qt   "0" )
@@ -66,6 +69,7 @@ dzenBar a x0 x1 = cmdArgs "dzen2"
   , ( "-fn" , myFont 12 )
   , ( "-e"  , "'button3=ungrabkeys'" )
   ]
+-}
 
 stalonetray x0 x1 = cmdArgs "stalonetray"
   [ ( "--geometry"     , qt $ concat [ show w , "x1+" , show x0 , "+0" ] )

@@ -1,23 +1,11 @@
 
-module My.Decor
-  ( normal
-  , urgent
-  , focused
-  , borders
-  , myXPConfig
-  , myDzenPP
-  , mySMConfig
-  , myFont
-  , myBorderWidth
-  , dzenColor
-  , ColorScheme(..)
-  ) where
+module My.Decor where
 
 import XMonad.Prompt
 import XMonad.Hooks.DynamicLog
 import XMonad.Util.WorkspaceCompare
 
-import My.NamedSubmap
+import My.Utils
 
 import Data.Char
 import Data.Word (Word32)
@@ -61,6 +49,11 @@ clickWS f ws = if null ws
   c = head ws 
   s = f ws
 
+myBarConfig = myDzenConfig
+  { dzenFont = Just $ myFont 12
+  , dzenBg = bg normal
+  , dzenFg = fg normal
+  }
 
 myXPConfig = defaultXPConfig
   { font = myFont 12
@@ -73,13 +66,13 @@ myXPConfig = defaultXPConfig
   , historySize = 100
   }
 
-mySMConfig :: SMConfig
-mySMConfig = defaultSMConfig
+myDzenConfig :: DzenConfig
+myDzenConfig = defaultDzenConfig
   { gap = 50
   , dzenFont  = Just $ myFont 14
   , fontWidth = 13
-  , fgDzen = fg cs
-  , bgDzen = bg cs
+  , dzenFg = fg cs
+  , dzenBg = bg cs
   }
   where
   cs = focused

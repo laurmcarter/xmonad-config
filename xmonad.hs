@@ -188,13 +188,13 @@ myKeys conf = mkKeymap conf $
   volDownKey = "<XF86AudioLowerVolume>"
   brightUpKey = "<XF86MonBrightnessUp>"
   brightDownKey = "<XF86MonBrightnessDown>"
-  mode = modeSM mySMConfig conf Nothing
-  upDown title upC downC = upDownModeSM mySMConfig conf Nothing title (plus_key,upC) ("-",downC)
-  sm = namedSM mySMConfig conf
+  mode = modeSM myDzenConfig conf Nothing 20 20
+  upDown title upC downC = upDownModeSM myDzenConfig conf Nothing 20 20 title (plus_key,upC) ("-",downC)
+  sm = namedSM myDzenConfig conf 20 20
   myView w = workspaceOnScreen wsMap W.view w >> warpToWindow 0.5 0.5
   myShift w = windows (W.shift w) >> warpToWindow 0.5 0.5
   plus_key = "S-="
-  smUrgent = namedSM (mySMConfig { bgDzen = bg urgent }) conf
+  smUrgent = namedSM (myDzenConfig { dzenBg = bg urgent }) conf 20 20
 
 -- }}}
 

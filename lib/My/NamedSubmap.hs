@@ -1,12 +1,5 @@
 
-module My.NamedSubmap
-  ( SMConfig(..)
-  , defaultSMConfig
-  , namedSM
-  , modeSM
-  , upDownModeSM
-  , reduceKeys
-  ) where
+module My.NamedSubmap where
 
 import XMonad
 import XMonad.Actions.Submap
@@ -21,73 +14,49 @@ import System.IO
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
 
--- | Configuration for popup Dzen.
-data SMConfig = SMConfig
-  { xPos      :: Int
-  , yPos      :: Int
-  , gap       :: Int
-  , dzenFont  :: Maybe String
-  , fontWidth :: Rational
-  , fgDzen    :: String
-  , bgDzen    :: String
-  }
-
-defaultSMConfig :: SMConfig
-defaultSMConfig = SMConfig
- { xPos = 20
- , yPos = 20
- , gap = 20
- , dzenFont  = Nothing
- , fontWidth = 11.5
- , fgDzen = "#ffffff"
- , bgDzen = "#808080"
- }
-
--- | Named Submap that reenters itself upon taking an action.
---   Any keypress not in the submap exits the map.
---   An exit key binding may be explicitly provided.
-modeSM :: SMConfig -> XConfig a -> Maybe String -> String -> [(String,String,X ())] -> X ()
-modeSM smc xc mexit title km = 
-  namedSM smc xc title $
-    maybe id (\k -> ((k,"Exit Mode",return ()) :)) mexit km'
-  where
-  km' = map (\(k,n,x) -> (k,n,x >> namedSM smc xc title km')) km
-
-upDownModeSM :: SMConfig -> XConfig a -> Maybe String -> String -> (String,X ()) -> (String,X ()) -> X ()
-upDownModeSM smc xc mexit title (upK,upC) (downK,downC) = modeSM smc xc mexit
-  ("- " ++ title ++ " +")
-  [ (upK,"Up",upC), (downK,"Down",downC) ]
-
 -- | Self-advertising submap that pops up a temporary, roll-open dzen window describing the
 --   available keybindings.
-namedSM :: SMConfig -> XConfig a -> String -> [(String,String,X())] -> X ()
-namedSM smc xc title km = do
+namedSM :: DzenConfig -> XConfig a -> Int -> Int -> String -> [(String,String,X())] -> X ()
+namedSM dzc xc x0 y0 title km = do
   pid <- io $ do
-    (i,o,e,pid) <- runInteractiveCommand $
-      cmdArgs "dzen2"
-        [ ( "-fg" , qt $ fgDzen smc             )
-        , ( "-bg" , qt $ bgDzen smc             )
-        , ( "-x"  , show $ xPos smc             )
-        , ( "-y"  , show $ yPos smc             )
-        , ( "-ta" , "l"                         )
-        , ( "-sa" , "l"                         )
-        , ( "-l"  , show $ length km            )
-        , ( "-w"  , show boxWidth               )
-        , ( "-fn" , fromMaybe "" $ dzenFont smc )
-        ]
+    (i,o,e,pid) <- runInteractiveCommand $ dzenBar dzc y0 x0 (x0 + boxWidth)
     hPutStrLn i ("^pa(10)"++title)
-    mapM_ (hPutStrLn i . alignDzen smc maxKeyLen) km
+    mapM_ (hPutStrLn i . alignDzen dzc maxKeyLen) km
     hFlush i
     return pid
   submap $ mkKeymap xc $ reduceKeys km
   io $ terminateProcess pid
   where
-    boxWidth = round (fontWidth smc * fromIntegral maxLineLen) + gap smc + 10
-    numLines = length km
-    maxLineLen = maximum $ length title : map (\(k,t,_)->1 + length k + length t) km
-    maxKeyLen = maximum $ map (\(k,_,_)->length k) km
+  boxWidth = round (fontWidth dzc * fromIntegral maxLineLen) + gap dzc + 10
+  numLines = length km
+  maxLineLen = maximum $ length title : map (\(k,t,_)->1 + length k + length t) km
+  maxKeyLen = maximum $ map (\(k,_,_)->length k) km
 
-alignDzen :: SMConfig -> Int -> (String, String, X ()) -> String
+
+
+-- | Named Submap that reenters itself upon taking an action.
+--   Any keypress not in the submap exits the map.
+--   An exit key binding may be explicitly provided.
+modeSM :: DzenConfig -> XConfig a -> Maybe String -> Int -> Int -> String -> [(String,String,X ())] -> X ()
+modeSM smc xc mexit x0 y0 title km = namedSM smc xc x0 y0 title $ addExit mexit km'
+  where
+  km' = map loopBack km
+  loopBack (k,n,x) = (k,n,x >> namedSM smc xc x0 y0 title km')
+  addExit = maybe id $ \k -> ((k,"Exit Mode", return ()) :)
+
+
+
+-- | Mode Submap that only has two actions, an Up and Down.
+upDownModeSM :: DzenConfig -> XConfig a -> Maybe String -> Int -> Int -> String -> (String,X ()) -> (String,X ()) -> X ()
+upDownModeSM smc xc mexit x0 y0 title (upK,upC) (downK,downC) = modeSM smc xc mexit x0 y0
+  (unwords ["-",title,"+"])
+  [ (upK,"Up",upC), (downK,"Down",downC) ]
+
+
+
+-- Helpers ---------------------------------------------------------------------
+
+alignDzen :: DzenConfig -> Int -> (String, String, X ()) -> String
 alignDzen smc len (k,t,_) = concat
   [ "^pa(10)" 
   , k
