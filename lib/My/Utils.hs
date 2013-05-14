@@ -1,7 +1,12 @@
 
-module My.Utils where
+module My.Utils
+  ( module My.Utils
+  , module My.Utils.Environment
+  ) where
 
 import XMonad.Util.Run (runProcessWithInput)
+
+import My.Utils.Environment
 
 import Control.Applicative ((<$>))
 import Data.Char
@@ -75,16 +80,22 @@ instance Show DzenAlign where
     CenterAlign -> "c"
     RightAlign -> "r"
 
-dzenBar :: DzenConfig -> Int -> Int -> Int -> String
-dzenBar dzc y0 x0 x1 = cmdArgs "dzen2" $
+dzenBar :: DzenConfig -> Int -> Int -> Int -> Int -> String
+dzenBar dzc numL y0 x0 x1 = cmdArgs "dzen2" $
   [ ( "-x"  , qt $ show x0 )
   , ( "-y"  , qt $ show y0 )
   , ( "-h"  , qt $ show $ lineHeight dzc )
   , ( "-w"  , qt $ show (x1 - x0) )
   , ( "-ta" , qt $ show $ titleAlign dzc )
   , ( "-sa" , qt $ show $ slaveAlign dzc )
+  , ( "-l"  , qt $ show numL )
   , ( "-fg" , qt $ dzenFg dzc )
   , ( "-bg" , qt $ dzenBg dzc )
-  , ( "-e"  , "'button3=ungrabkeys'" )
+  , ( "-e"  , qt $ "button3=ungrabkeys" )
   ] ++ [ ( "-fn" , qt fn ) | Just fn <- [dzenFont dzc] ]
+
+volUpKey = "<XF86AudioRaiseVolume>"
+volDownKey = "<XF86AudioLowerVolume>"
+brightUpKey = "<XF86MonBrightnessUp>"
+brightDownKey = "<XF86MonBrightnessDown>"
 

@@ -19,7 +19,7 @@ import Data.Maybe (fromMaybe)
 namedSM :: DzenConfig -> XConfig a -> Int -> Int -> String -> [(String,String,X())] -> X ()
 namedSM dzc xc x0 y0 title km = do
   pid <- io $ do
-    (i,o,e,pid) <- runInteractiveCommand $ dzenBar dzc y0 x0 (x0 + boxWidth)
+    (i,o,e,pid) <- runInteractiveCommand $ dzenBar dzc (length km) y0 x0 (x0 + boxWidth)
     hPutStrLn i ("^pa(10)"++title)
     mapM_ (hPutStrLn i . alignDzen dzc maxKeyLen) km
     hFlush i

@@ -41,6 +41,7 @@ import Text.ParserCombinators.ReadP (readP_to_S)
 import qualified Data.Map as M
 
 import My.Bars
+import My.PianoBar
 import My.Decor
 import My.WorkspaceOnScreen
 import My.NamedSubmap
@@ -137,6 +138,7 @@ myKeys conf = mkKeymap conf $
     , ( "M-v"           , "Volume Mode"             , upDown "Volume" (volUp 5) (volDown 5) )
     , ( "M-b"           , "Brightness Mode"         , upDown "Brightness" (brightnessUp 1) (brightnessDown 1) )
     , ( "C-d"           , "Confirm Exit"            , smUrgent "Confirm Exit" exitMap )
+    , ( "M-m"           , "Mplayer Keys"            , mplayerBar 5 "Music" "/home/kcarter/.mplayer/current" )
     ]
   exitMap =
     [ ( "C-d"           , "Yes, really exit."       , pasteChar controlMask 'd' )
@@ -184,10 +186,6 @@ myKeys conf = mkKeymap conf $
     , ( "M-a"           , "Next Layout"             , sendMessage NextLayout )
     , ( "r"             , "First Layout"            , sendMessage FirstLayout )
     ]
-  volUpKey = "<XF86AudioRaiseVolume>"
-  volDownKey = "<XF86AudioLowerVolume>"
-  brightUpKey = "<XF86MonBrightnessUp>"
-  brightDownKey = "<XF86MonBrightnessDown>"
   mode = modeSM myDzenConfig conf Nothing 20 20
   upDown title upC downC = upDownModeSM myDzenConfig conf Nothing 20 20 title (plus_key,upC) ("-",downC)
   sm = namedSM myDzenConfig conf 20 20
