@@ -8,31 +8,34 @@ import XMonad.Util.WorkspaceCompare
 import My.Utils
 
 import Data.Char
+import Data.Maybe (fromMaybe)
 import Data.Word (Word32)
 import System.IO (hPutStrLn)
 
 myBorderWidth :: Word32
 myBorderWidth = 1
 myFont :: Int -> String
-myFont s       = "-*-terminus-medium-r-normal-*-" ++ show s ++ "-*-*-*-*-*-*-*"
---myFont        = "Droid Sans Mono:size=8"
+--myFont s       = "-*-terminus-medium-r-normal-*-" ++ show s ++ "-*-*-*-*-*-*-*"
+myFont s      = "'Terminus:size=" ++ show s ++ "'"
 
-normal  = CS { fg = "#ffffff" , bg = "#000000" }
-urgent  = CS { fg = "#ffffff" , bg = "#ff0000" }
+normal  = CS { fg = "#839496" , bg = "#002b36" }
+urgent  = CS { fg = "#ffffff" , bg = "#cb4b16" }
 focused = CS { fg = "#f0f0f0" , bg = "#333333" }
 borders = CS { fg = "#433ffe" , bg = "#010062" }
+light   = CS { fg = "#002b36" , bg = "#839496" }
 
 myDzenPP hs = PP 
-  { ppCurrent         = clickWS (dzenColor "lightgreen" "" . wrap "[" "]")
-  , ppVisible         = clickWS (wrap "<" ">")
-  , ppHidden          = clickWS (dzenColor "grey" "" . pad)
+  { ppCurrent         = clickWS (dzenColor "#84b000" "" . wrap "[" "]")
+  , ppVisible         = clickWS (dzenColor "#657b83" "" . wrap "[" "]")
+  , ppHidden          = clickWS (dzenColor "#435459" "" . pad)
   , ppHiddenNoWindows = const ""
   , ppUrgent          = clickWS (dzenColor (fg urgent) (bg urgent) . pad)
-  , ppSep             = " : "
+  , ppSep             = dzenColor "#268bd2" "" " :: "
   , ppWsSep           = " "
-  , ppTitle           = shorten 80
+  , ppTitle           = shorten 60
   , ppLayout          = id
-  , ppOrder           = id
+                        -- don't care about the layout name.
+  , ppOrder           = \(ws:_:t:_) -> [ws,t]
   , ppOutput          = sequence_ . mapM hPutStrLn hs
   , ppSort            = getSortByIndex
   , ppExtras          = []
@@ -50,13 +53,12 @@ clickWS f ws = if null ws
   s = f ws
 
 myBarConfig = myDzenConfig
-  { dzenFont = Just $ myFont 12
-  , dzenBg = bg normal
+  { dzenBg = bg normal
   , dzenFg = fg normal
   }
 
 myXPConfig = defaultXPConfig
-  { font = myFont 12
+  { font = myFont 8
   , bgColor = bg normal
   , fgColor = fg normal
   , fgHLight = fg focused
@@ -69,13 +71,13 @@ myXPConfig = defaultXPConfig
 myDzenConfig :: DzenConfig
 myDzenConfig = defaultDzenConfig
   { gap = 50
-  , dzenFont  = Just $ myFont 14
+  , dzenFont  = Just $ myFont 8
   , fontWidth = 13
   , dzenFg = fg cs
   , dzenBg = bg cs
   }
   where
-  cs = focused
+  cs = light
 
 data ColorScheme = CS
   { fg :: String

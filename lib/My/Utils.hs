@@ -45,6 +45,20 @@ pipe = flip $ foldlM $ \input (cmd,args) -> runProcessWithInput cmd args input
 branch :: a -> a -> Bool -> a
 branch t f b = if b then t else f
 
+dzenBar :: DzenConfig -> Int -> Int -> Int -> Int -> String
+dzenBar dzc numL y0 x0 x1 = cmdArgs "dzen2" $
+  [ ( "-x"  , qt $ show x0 )
+  , ( "-y"  , qt $ show y0 )
+  , ( "-h"  , qt $ show $ lineHeight dzc )
+  , ( "-w"  , qt $ show (x1 - x0) )
+  , ( "-ta" , qt $ show $ titleAlign dzc )
+  , ( "-sa" , qt $ show $ slaveAlign dzc )
+  , ( "-l"  , qt $ show numL )
+  , ( "-fg" , qt $ dzenFg dzc )
+  , ( "-bg" , qt $ dzenBg dzc )
+  , ( "-e"  , qt $ "button3=ungrabkeys" )
+  ] ++ [ ( "-fn" , qt fn ) | Just fn <- [dzenFont dzc] ]
+
 -- | Configuration for popup Dzen.
 data DzenConfig = DzenConfig
   { gap        :: Int
@@ -79,20 +93,6 @@ instance Show DzenAlign where
     LeftAlign -> "l"
     CenterAlign -> "c"
     RightAlign -> "r"
-
-dzenBar :: DzenConfig -> Int -> Int -> Int -> Int -> String
-dzenBar dzc numL y0 x0 x1 = cmdArgs "dzen2" $
-  [ ( "-x"  , qt $ show x0 )
-  , ( "-y"  , qt $ show y0 )
-  , ( "-h"  , qt $ show $ lineHeight dzc )
-  , ( "-w"  , qt $ show (x1 - x0) )
-  , ( "-ta" , qt $ show $ titleAlign dzc )
-  , ( "-sa" , qt $ show $ slaveAlign dzc )
-  , ( "-l"  , qt $ show numL )
-  , ( "-fg" , qt $ dzenFg dzc )
-  , ( "-bg" , qt $ dzenBg dzc )
-  , ( "-e"  , qt $ "button3=ungrabkeys" )
-  ] ++ [ ( "-fn" , qt fn ) | Just fn <- [dzenFont dzc] ]
 
 volUpKey = "<XF86AudioRaiseVolume>"
 volDownKey = "<XF86AudioLowerVolume>"

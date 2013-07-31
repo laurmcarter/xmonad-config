@@ -22,7 +22,7 @@ import XMonad.Prompt.XMonad (xmonadPrompt)
 
 import XMonad.Util.EZConfig (mkKeymap)
 import XMonad.Util.Run (spawnPipe,runProcessWithInput,runInTerm)
-import XMonad.Util.Paste (pasteChar)
+import XMonad.Util.Paste (pasteChar, pasteSelection)
 
 import XMonad.Actions.Submap (submap)
 import XMonad.Actions.FindEmptyWorkspace (viewEmptyWorkspace,tagToEmptyWorkspace)
@@ -56,11 +56,13 @@ import qualified My.WorkspaceHistory as H
 -- Applications {{{
 
 myExtMon     = "DP2"
-myTerminal   = "urxvt"
+myTerminal   = "terminator"
+               -- "urxvt256c -title urxvt -fade 0"
 myBrowser    = "google-chrome"
-irssi        = runInTerm "-t irssi" "irssi"
+irssi        = spawn "/home/kcarter/bin/start-irssi"
 thunderbird  = spawn "thunderbird"
 nmApplet     = spawn "nm-applet"
+mplayerFIFO  = "/home/kcarter/.mplayer/fifo"
 
 -- }}}
 
@@ -138,7 +140,8 @@ myKeys conf = mkKeymap conf $
     , ( "M-v"           , "Volume Mode"             , upDown "Volume" (volUp 5) (volDown 5) )
     , ( "M-b"           , "Brightness Mode"         , upDown "Brightness" (brightnessUp 1) (brightnessDown 1) )
     , ( "C-d"           , "Confirm Exit"            , smUrgent "Confirm Exit" exitMap )
-    , ( "M-m"           , "Mplayer Keys"            , mplayerBar 5 "Music" "/home/kcarter/.mplayer/current" )
+    , ( "M-m"           , "Mplayer Keys"            , mplayerSM "mplayer" )
+    , ( "M-<Backspace>" , "Paste buffer"            , pasteSelection )
     ]
   exitMap =
     [ ( "C-d"           , "Yes, really exit."       , pasteChar controlMask 'd' )
@@ -186,6 +189,7 @@ myKeys conf = mkKeymap conf $
     , ( "M-a"           , "Next Layout"             , sendMessage NextLayout )
     , ( "r"             , "First Layout"            , sendMessage FirstLayout )
     ]
+  mplayerSM = musicSM mplayerFIFO True True myDzenConfig conf 20 20
   mode = modeSM myDzenConfig conf Nothing 20 20
   upDown title upC downC = upDownModeSM myDzenConfig conf Nothing 20 20 title (plus_key,upC) ("-",downC)
   sm = namedSM myDzenConfig conf 20 20
@@ -222,7 +226,7 @@ myManageHook = (composeAll . concat $
     ignores       = ["desktop_window","stalonetray"]
     classFloats   = ["MPlayer","Xmessage", "Gcolor2"]
     fullFloats    = ["exe"]
-    matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup"]
+    matchFloats   = ["dialog","preferences","settings","wicd","options","contact","nm","qalc","pop-up","task","setup","gloss"]
     notifications = ["notify-dzen"]
     mail          = ["Thunderbird"]
     im            = ["irssi","pidgin"]
